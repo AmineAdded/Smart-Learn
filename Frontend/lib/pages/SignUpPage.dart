@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+// import 'HomePage.dart'; // Importez votre page d'accueil ici
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key}) : super(key: key);
@@ -14,6 +16,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _authService = AuthService();
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -42,9 +45,13 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<void> _handleSignUp() async {
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez accepter les conditions d\'utilisation'),
+        SnackBar(
+          content: const Text('Veuillez accepter les conditions d\'utilisation'),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
       return;
@@ -53,24 +60,74 @@ class _SignUpPageState extends State<SignUpPage> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      // TODO: Implémenter l'appel API vers Spring Boot
-      await Future.delayed(const Duration(seconds: 2)); // Simulation
-
-      setState(() => _isLoading = false);
-
-      // Afficher un message de succès
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Compte créé avec succès !'),
-            backgroundColor: Colors.green,
-          ),
+      try {
+        final result = await _authService.signUp(
+          nom: _nomController.text.trim(),
+          prenom: _prenomController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          niveau: _selectedNiveau!,
         );
 
-        // Retour à la page de login
-        Navigator.pop(context);
+        setState(() => _isLoading = false);
+
+        if (!mounted) return;
+
+        if (result['success']) {
+          // Afficher un message de succès
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Compte créé avec succès ! Bienvenue ${result['data']['prenom']}'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+
+          // Navigation vers la page d'accueil
+          // TODO: Remplacer Placeholder par votre HomePage
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const Placeholder(), // Remplacer par HomePage()
+            ),
+          );
+        } else {
+          // Afficher le message d'erreur
+          _showErrorDialog(result['message']);
+        }
+      } catch (e) {
+        setState(() => _isLoading = false);
+        _showErrorDialog('Une erreur inattendue s\'est produite');
       }
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: const [
+            Icon(Icons.error_outline, color: Colors.red, size: 28),
+            SizedBox(width: 12),
+            Text('Erreur d\'inscription'),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -131,7 +188,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
                   const SizedBox(height: 24),
 
-                  // Connexion avec Google/Apple
+                  // Connexion avec Google
                   _buildSocialButtons(),
 
                   const SizedBox(height: 24),
@@ -177,6 +234,7 @@ class _SignUpPageState extends State<SignUpPage> {
     return TextFormField(
       controller: _nomController,
       textCapitalization: TextCapitalization.words,
+      enabled: !_isLoading,
       decoration: InputDecoration(
         labelText: 'Nom',
         hintText: 'Votre nom',
@@ -206,6 +264,7 @@ class _SignUpPageState extends State<SignUpPage> {
     return TextFormField(
       controller: _prenomController,
       textCapitalization: TextCapitalization.words,
+      enabled: !_isLoading,
       decoration: InputDecoration(
         labelText: 'Prénom',
         hintText: 'Votre prénom',
@@ -235,6 +294,7 @@ class _SignUpPageState extends State<SignUpPage> {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
+      enabled: !_isLoading,
       decoration: InputDecoration(
         labelText: 'Email',
         hintText: 'exemple@email.com',
@@ -288,7 +348,7 @@ class _SignUpPageState extends State<SignUpPage> {
           child: Text(niveau),
         );
       }).toList(),
-      onChanged: (value) {
+      onChanged: _isLoading ? null : (value) {
         setState(() => _selectedNiveau = value);
       },
       validator: (value) {
@@ -304,6 +364,7 @@ class _SignUpPageState extends State<SignUpPage> {
     return TextFormField(
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
+      enabled: !_isLoading,
       decoration: InputDecoration(
         labelText: 'Mot de passe',
         hintText: 'Min. 8 caractères',
@@ -350,6 +411,7 @@ class _SignUpPageState extends State<SignUpPage> {
     return TextFormField(
       controller: _confirmPasswordController,
       obscureText: !_isConfirmPasswordVisible,
+      enabled: !_isLoading,
       decoration: InputDecoration(
         labelText: 'Confirmer le mot de passe',
         hintText: 'Répétez le mot de passe',
@@ -391,14 +453,14 @@ class _SignUpPageState extends State<SignUpPage> {
       children: [
         Checkbox(
           value: _acceptTerms,
-          onChanged: (value) {
+          onChanged: _isLoading ? null : (value) {
             setState(() => _acceptTerms = value ?? false);
           },
           activeColor: const Color(0xFF5B9FD8),
         ),
         Expanded(
           child: GestureDetector(
-            onTap: () {
+            onTap: _isLoading ? null : () {
               setState(() => _acceptTerms = !_acceptTerms);
             },
             child: RichText(
@@ -442,6 +504,7 @@ class _SignUpPageState extends State<SignUpPage> {
           backgroundColor: const Color(0xFF5B9FD8),
           foregroundColor: Colors.white,
           elevation: 0,
+          disabledBackgroundColor: Colors.grey[300],
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -486,14 +549,15 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Widget _buildSocialButtons() {
-    return Column(
-      children: [
-      // Bouton Google
-      SizedBox(
+    return SizedBox(
       height: 56,
       child: OutlinedButton.icon(
-        onPressed: () {
-          // TODO: Implémenter OAuth Google
+        onPressed: _isLoading ? null : () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Inscription Google en cours de développement'),
+            ),
+          );
         },
         icon: Image.asset(
           'assets/google_logo.png',
@@ -518,10 +582,6 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
         ),
       ),
-    ),
-
-    const SizedBox(height: 12),
-    ],
     );
   }
 
@@ -537,11 +597,11 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
         ),
         GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Text(
+          onTap: _isLoading ? null : () => Navigator.pop(context),
+          child: Text(
             'Se connecter',
             style: TextStyle(
-              color: Color(0xFF5B9FD8),
+              color: _isLoading ? Colors.grey : const Color(0xFF5B9FD8),
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),

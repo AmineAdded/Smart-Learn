@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'onboarding_page.dart';
 import 'pages/LoginPage.dart';
 import 'pages/SignUpPage.dart';
 
-void main() {
-runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 🟢 Charge le fichier .env AVANT le lancement de l’app
+  await dotenv.load(fileName: ".env");
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -29,10 +35,8 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignUpPage(),
       },
 
-      // Page d’accueil par défaut
       initialRoute: '/',
     );
-
   }
 }
 
@@ -65,8 +69,11 @@ class _SmartLearnSplashScreenState extends State<SmartLearnSplashScreen>
 
     // Navigation automatique après 3 secondes
     Future.delayed(const Duration(seconds: 3), () {
-      // Naviguez vers votre écran suivant ici
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginPage()));
+      // ❌ plus besoin de charger dotenv ici !
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => LoginPage()),
+      );
     });
   }
 
@@ -97,7 +104,6 @@ class _SmartLearnSplashScreenState extends State<SmartLearnSplashScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo Container
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -121,7 +127,6 @@ class _SmartLearnSplashScreenState extends State<SmartLearnSplashScreen>
                           color: Color(0xFF5B9FD8),
                         ),
                       ),
-                      // Étoile dorée en haut à droite
                       Positioned(
                         top: -8,
                         right: -8,
@@ -140,10 +145,7 @@ class _SmartLearnSplashScreenState extends State<SmartLearnSplashScreen>
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 32),
-
-                  // Titre
                   const Text(
                     'SmartLearn',
                     style: TextStyle(
@@ -153,10 +155,7 @@ class _SmartLearnSplashScreenState extends State<SmartLearnSplashScreen>
                       letterSpacing: 0.5,
                     ),
                   ),
-
                   const SizedBox(height: 12),
-
-                  // Sous-titre
                   const Text(
                     'Apprentissage intelligent par IA',
                     style: TextStyle(
@@ -165,10 +164,7 @@ class _SmartLearnSplashScreenState extends State<SmartLearnSplashScreen>
                       fontWeight: FontWeight.w400,
                     ),
                   ),
-
                   const SizedBox(height: 48),
-
-                  // Indicateur de chargement
                   _buildLoadingIndicator(),
                 ],
               ),
@@ -194,9 +190,7 @@ class _SmartLearnSplashScreenState extends State<SmartLearnSplashScreen>
 
 class _AnimatedDot extends StatefulWidget {
   final int index;
-
   const _AnimatedDot({required this.index});
-
   @override
   State<_AnimatedDot> createState() => _AnimatedDotState();
 }
@@ -216,7 +210,6 @@ class _AnimatedDotState extends State<_AnimatedDot>
       duration: const Duration(milliseconds: 1200),
     );
 
-    // Animation avec délai pour chaque point
     final delay = widget.index * 0.2;
 
     _scaleAnimation = TweenSequence<double>([
