@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'onboarding_page.dart';
+import 'pages/LoginPage.dart';
+import 'pages/SignUpPage.dart';
 
 void main() {
 runApp(const MyApp());
@@ -14,12 +16,23 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'SmartLearn',
-       theme: ThemeData(
-         primarySwatch: Colors.blue,
-         fontFamily: 'Roboto',
-       ),
-       home: const SmartLearnSplashScreen(),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        fontFamily: 'Roboto',
+      ),
+
+      // 🔗 Définition des routes
+      routes: {
+        '/': (context) => const SmartLearnSplashScreen(),
+        '/onboarding': (context) => OnboardingPage(),
+        '/login': (context) => LoginPage(),
+        '/signup': (context) => SignUpPage(),
+      },
+
+      // Page d’accueil par défaut
+      initialRoute: '/',
     );
+
   }
 }
 
@@ -53,7 +66,7 @@ class _SmartLearnSplashScreenState extends State<SmartLearnSplashScreen>
     // Navigation automatique après 3 secondes
     Future.delayed(const Duration(seconds: 3), () {
       // Naviguez vers votre écran suivant ici
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingPage()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginPage()));
     });
   }
 
