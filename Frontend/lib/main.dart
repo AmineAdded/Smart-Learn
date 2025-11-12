@@ -4,11 +4,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'onboarding_page.dart';
 import 'pages/LoginPage.dart';
 import 'pages/SignUpPage.dart';
+import 'pages/HomePage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 🟢 Charge le fichier .env AVANT le lancement de l’app
+  // 🟢 Charge le fichier .env AVANT le lancement de l'app
   await dotenv.load(fileName: ".env");
 
   runApp(const MyApp());
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
         '/onboarding': (context) => OnboardingPage(),
         '/login': (context) => LoginPage(),
         '/signup': (context) => SignUpPage(),
+        '/home': (context) => const HomePage()
       },
 
       initialRoute: '/',
@@ -67,13 +69,9 @@ class _SmartLearnSplashScreenState extends State<SmartLearnSplashScreen>
 
     _animationController.forward();
 
-    // Navigation automatique après 3 secondes
+    // Navigation automatique vers OnboardingPage après 3 secondes
     Future.delayed(const Duration(seconds: 3), () {
-      // ❌ plus besoin de charger dotenv ici !
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => LoginPage()),
-      );
+      Navigator.pushReplacementNamed(context, '/onboarding');
     });
   }
 

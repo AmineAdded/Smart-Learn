@@ -3,12 +3,9 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-
 class AuthService {
   // Changez cette URL selon votre configuration
-  static final String baseUrl = '${dotenv.env['URL8080']}/api/auth'; // Pour émulateur Android
-  // static const String baseUrl = 'http://localhost:8080/api/auth'; // Pour iOS Simulator
-  // static const String baseUrl = 'http://YOUR_IP:8080/api/auth'; // Pour appareil physique
+  static final String baseUrl = '${dotenv.env['URL8080']}/api/auth';
 
   // Clés pour SharedPreferences
   static const String tokenKey = 'auth_token';
@@ -28,6 +25,9 @@ class AuthService {
     required String niveau,
   }) async {
     try {
+      print('🔵 Tentative d\'inscription...');
+      print('URL: $baseUrl/signup');
+
       final response = await http.post(
         Uri.parse('$baseUrl/signup'),
         headers: {'Content-Type': 'application/json'},
@@ -40,22 +40,50 @@ class AuthService {
         }),
       );
 
-      final data = jsonDecode(response.body);
+      print('🔵 Status Code: ${response.statusCode}');
+      print('🔵 Response Body: ${response.body}');
 
-      if (response.statusCode == 200) {
+      // Vérifier si la réponse est vide
+      if (response.body.isEmpty) {
+        print('⚠️ Réponse vide du serveur');
+        return {
+          'success': false,
+          'message': 'Le serveur a retourné une réponse vide'
+        };
+      }
+
+      final data = jsonDecode(response.body);
+      print('🔵 Data décodée: $data');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Vérifier si le token existe dans la réponse
+        if (data['token'] == null) {
+          print('⚠️ Token manquant dans la réponse');
+          return {
+            'success': false,
+            'message': 'Erreur serveur: token manquant'
+          };
+        }
+
         // Sauvegarder le token et les informations utilisateur
         await _saveUserData(data);
+        print('✅ Inscription réussie !');
+
         return {'success': true, 'data': data};
       } else {
+        print('❌ Erreur: ${data['message']}');
         return {
           'success': false,
           'message': data['message'] ?? 'Erreur lors de l\'inscription'
         };
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ Exception lors de l\'inscription: $e');
+      print('Stack trace: $stackTrace');
+
       return {
         'success': false,
-        'message': 'Erreur de connexion au serveur: $e'
+        'message': 'Erreur de connexion au serveur. Vérifiez votre connexion Internet.'
       };
     }
   }
@@ -66,6 +94,9 @@ class AuthService {
     required String password,
   }) async {
     try {
+      print('🔵 Tentative de connexion...');
+      print('URL: $baseUrl/login');
+
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
         headers: {'Content-Type': 'application/json'},
@@ -75,36 +106,108 @@ class AuthService {
         }),
       );
 
+      print('🔵 Status Code: ${response.statusCode}');
+      print('🔵 Response Body: ${response.body}');
+
+      // Vérifier si la réponse est vide
+      if (response.body.isEmpty) {
+        print('⚠️ Réponse vide du serveur');
+        return {
+          'success': false,
+          'message': 'Le serveur a retourné une réponse vide'
+        };
+      }
+
       final data = jsonDecode(response.body);
+      print('🔵 Data décodée: $data');
 
       if (response.statusCode == 200) {
+        // Vérifier si le token existe dans la réponse
+        if (data['token'] == null) {
+          print('⚠️ Token manquant dans la réponse');
+          return {
+            'success': false,
+            'message': 'Erreur serveur: token manquant'
+          };
+        }
+
         // Sauvegarder le token et les informations utilisateur
         await _saveUserData(data);
+        print('✅ Connexion réussie !');
+
         return {'success': true, 'data': data};
       } else {
+        print('❌ Erreur: ${data['message']}');
         return {
           'success': false,
           'message': data['message'] ?? 'Email ou mot de passe incorrect'
         };
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ Exception lors de la connexion: $e');
+      print('Stack trace: $stackTrace');
+
       return {
         'success': false,
-        'message': 'Erreur de connexion au serveur: $e'
+        'message': 'Erreur de connexion au serveur. Vérifiez votre connexion Internet.'
       };
     }
   }
 
   /// Sauvegarder les données utilisateur localement
   Future<void> _saveUserData(Map<String, dynamic> data) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(tokenKey, data['token']);
-    await prefs.setInt(userIdKey, data['id']);
-    await prefs.setString(userEmailKey, data['email']);
-    await prefs.setString(userNomKey, data['nom']);
-    await prefs.setString(userPrenomKey, data['prenom']);
-    await prefs.setString(userNiveauKey, data['niveau']);
-    await prefs.setString(userRoleKey, data['role']);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      print('💾 Sauvegarde des données utilisateur...');
+
+      // Sauvegarder le token (obligatoire)
+      if (data['token'] != null) {
+        await prefs.setString(tokenKey, data['token']);
+        print('✅ Token sauvegardé');
+      }
+
+      // Sauvegarder l'ID (avec gestion du type)
+      if (data['id'] != null) {
+        if (data['id'] is int) {
+          await prefs.setInt(userIdKey, data['id']);
+        } else if (data['id'] is String) {
+          await prefs.setInt(userIdKey, int.parse(data['id']));
+        }
+        print('✅ ID sauvegardé: ${data['id']}');
+      }
+
+      // Sauvegarder les autres informations
+      if (data['email'] != null) {
+        await prefs.setString(userEmailKey, data['email']);
+        print('✅ Email sauvegardé: ${data['email']}');
+      }
+
+      if (data['nom'] != null) {
+        await prefs.setString(userNomKey, data['nom']);
+        print('✅ Nom sauvegardé: ${data['nom']}');
+      }
+
+      if (data['prenom'] != null) {
+        await prefs.setString(userPrenomKey, data['prenom']);
+        print('✅ Prénom sauvegardé: ${data['prenom']}');
+      }
+
+      if (data['niveau'] != null) {
+        await prefs.setString(userNiveauKey, data['niveau']);
+        print('✅ Niveau sauvegardé: ${data['niveau']}');
+      }
+
+      if (data['role'] != null) {
+        await prefs.setString(userRoleKey, data['role']);
+        print('✅ Role sauvegardé: ${data['role']}');
+      }
+
+      print('✅ Toutes les données ont été sauvegardées');
+    } catch (e) {
+      print('❌ Erreur lors de la sauvegarde: $e');
+      rethrow;
+    }
   }
 
   /// Récupérer le token stocké
@@ -175,5 +278,6 @@ class AuthService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+    print('✅ Utilisateur déconnecté');
   }
 }

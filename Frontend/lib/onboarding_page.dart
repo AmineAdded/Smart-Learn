@@ -60,13 +60,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   void _finishOnboarding() {
-    // Naviguer vers l'écran de chargement ou la page d'accueil
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const Placeholder(), // Remplacer par SmartLearnSplashScreen()
-      ),
-    );
+    // Naviguer vers la page de connexion
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -244,25 +239,3 @@ class OnboardingItem {
     required this.description,
   });
 }
-
-// Pour utiliser cette page:
- void main() {
-   runApp(const MyApp());
- }
-
- class MyApp extends StatelessWidget {
-   const MyApp({Key? key}) : super(key: key);
-
-   @override
-   Widget build(BuildContext context) {
-     return MaterialApp(
-       debugShowCheckedModeBanner: false,
-       title: 'SmartLearn',
-       theme: ThemeData(
-         primarySwatch: Colors.blue,
-         fontFamily: 'Roboto',
-       ),
-       home: const OnboardingPage(),
-     );
-   }
- }
