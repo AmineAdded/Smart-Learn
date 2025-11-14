@@ -5,6 +5,7 @@ import 'onboarding_page.dart';
 import 'pages/LoginPage.dart';
 import 'pages/SignUpPage.dart';
 import 'pages/HomePage.dart';
+import 'pages/ProfilePage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +35,8 @@ class MyApp extends StatelessWidget {
         '/onboarding': (context) => OnboardingPage(),
         '/login': (context) => LoginPage(),
         '/signup': (context) => SignUpPage(),
-        '/home': (context) => const HomePage()
+        '/home': (context) => const HomePage(),
+        '/profile': (context) => const ProfilePage()
       },
 
       initialRoute: '/',

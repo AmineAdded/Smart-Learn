@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../ProfilePage.dart';
+
 /// Widget pour la barre de navigation inférieure
 class CustomBottomNavigationBar extends StatelessWidget {
   final int currentIndex;
@@ -58,7 +60,12 @@ class CustomBottomNavigationBar extends StatelessWidget {
                 icon: Icons.person,
                 label: 'Profil',
                 isSelected: currentIndex == 4,
-                onTap: () => onTap(4),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ProfilePage()),
+                  );
+                },
               ),
             ],
           ),
