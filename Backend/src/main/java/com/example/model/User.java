@@ -52,7 +52,7 @@ public class User {
     @NotBlank(message = "Le niveau est obligatoire")
     @Column(nullable = false)
     private String niveau;
-
+    @Builder.Default
     @Column(nullable = false)
     private Boolean enabled = true;
 
