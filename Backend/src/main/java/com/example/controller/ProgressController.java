@@ -2,6 +2,9 @@ package com.example.controller;
 
 import com.example.dto.*;
 import com.example.service.ProgressService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -126,4 +129,31 @@ public class ProgressController {
                     .build());
         }
     }
+    
+
+
+/**
+ * POST /api/progress/xp
+ * Ajouter des XP à l'utilisateur
+ */
+@PostMapping("/xp")
+public ResponseEntity<?> addXp(@Valid @RequestBody AddXpRequest request) {
+    try {
+        AddXpResponse response = progressService.addXp(
+            request.getXpAmount(),
+            request.getReason(),
+            request.getSource()
+        );
+        
+        return ResponseEntity.ok(response);
+    } catch (Exception e) {
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ErrorResponse.builder()
+                .error("Erreur serveur")
+                .message("Impossible d'ajouter l'XP: " + e.getMessage())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .build());
+    }
+}
 }

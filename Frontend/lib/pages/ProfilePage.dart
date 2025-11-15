@@ -5,9 +5,11 @@ import 'profile/profile_header.dart';
 import 'profile/profile_info_section.dart';
 import 'profile/profile_edit_dialog.dart';
 import 'profile/profile_password_dialog.dart';
+import 'profile/profile_stats_tab.dart';
 
-/// Page principale du profil utilisateur
-/// Affiche les informations et permet la modification
+/// Page principale du profil avec système d'onglets
+/// Onglet 1 : Informations personnelles
+/// Onglet 2 : Statistiques et progression
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
 
@@ -15,35 +17,38 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
-  // Service pour gérer les opérations du profil
+class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStateMixin {
   final _profileService = ProfileService();
 
-  // Modèle du profil (nullable car pas encore chargé au départ)
   ProfileModel? _profile;
-
-  // État de chargement
   bool _isLoading = true;
+
+  // Controller pour les onglets
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    // Charger le profil dès le démarrage de la page
+    _tabController = TabController(length: 2, vsync: this);
     _loadProfile();
   }
 
-  /// Méthode asynchrone pour charger le profil depuis le serveur
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  /// Charger le profil utilisateur
   Future<void> _loadProfile() async {
     setState(() => _isLoading = true);
 
-    // await : attend que la requête se termine
     final result = await _profileService.getProfile();
 
-    if (!mounted) return; // Vérifier que le widget est toujours affiché
+    if (!mounted) return;
 
     if (result['success']) {
       setState(() {
-        // Récupérer le ProfileModel depuis le résultat
         _profile = result['profile'] as ProfileModel;
         _isLoading = false;
       });
@@ -53,28 +58,23 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  /// Ouvrir le dialogue de modification du profil
+  /// Ouvrir le dialogue de modification
   Future<void> _openEditDialog() async {
     if (_profile == null) return;
 
-    // Afficher le dialogue et attendre le résultat
     final result = await showDialog<ProfileModel>(
       context: context,
       builder: (context) => ProfileEditDialog(profile: _profile!),
     );
 
-    // Si l'utilisateur a validé les modifications
     if (result != null) {
-      setState(() {
-        _profile = result; // Mettre à jour le profil affiché
-      });
+      setState(() => _profile = result);
       _showSuccessSnackBar('Profil mis à jour avec succès');
     }
   }
 
   /// Ouvrir le dialogue de changement de mot de passe
   Future<void> _openPasswordDialog() async {
-    // Afficher le dialogue et attendre le résultat
     final success = await showDialog<bool>(
       context: context,
       builder: (context) => const ProfilePasswordDialog(),
@@ -85,7 +85,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  /// Afficher un message d'erreur
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -96,7 +95,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  /// Afficher un message de succès
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -109,77 +107,122 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Mon Profil'),
-        backgroundColor: const Color(0xFF5B9FD8),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: _isLoading
-          ? const Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFF5B9FD8),
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        body: const Center(
+          child: CircularProgressIndicator(color: Color(0xFF5B9FD8)),
         ),
-      )
-          : _profile == null
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            const Text('Impossible de charger le profil'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadProfile,
-              child: const Text('Réessayer'),
-            ),
-          ],
-        ),
-      )
-          : RefreshIndicator(
-        onRefresh: _loadProfile,
-        color: const Color(0xFF5B9FD8),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+      );
+    }
+
+    if (_profile == null) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        body: Center(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // En-tête avec avatar et nom
-              ProfileHeader(profile: _profile!),
-
-              const SizedBox(height: 24),
-
-              // Section : Informations personnelles
-              ProfileInfoSection(
-                profile: _profile!,
-                onEditPressed: _openEditDialog,
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text('Impossible de charger le profil'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadProfile,
+                child: const Text('Réessayer'),
               ),
-
-              const SizedBox(height: 16),
-
-              // Section : Changer le mot de passe
-              _buildPasswordSection(),
-
-              const SizedBox(height: 16),
-
-              // Section : Informations du compte
-              _buildAccountInfoSection(),
-
-              const SizedBox(height: 32),
             ],
           ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            // AppBar avec onglets
+            SliverAppBar(
+              expandedHeight: 200,
+              floating: false,
+              pinned: true,
+              backgroundColor: const Color(0xFF5B9FD8),
+              flexibleSpace: FlexibleSpaceBar(
+                background: ProfileHeader(profile: _profile!),
+              ),
+              bottom: TabBar(
+                controller: _tabController,
+                indicatorColor: Colors.white,
+                indicatorWeight: 3,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                labelStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                tabs: const [
+                  Tab(
+                    icon: Icon(Icons.person),
+                    text: 'Informations',
+                  ),
+                  Tab(
+                    icon: Icon(Icons.bar_chart),
+                    text: 'Statistiques',
+                  ),
+                ],
+              ),
+            ),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            // Onglet 1 : Informations personnelles
+            _buildInfoTab(),
+
+            // Onglet 2 : Statistiques
+            ProfileStatsTab(),
+          ],
         ),
       ),
     );
   }
 
-  /// Widget pour la section de changement de mot de passe
+  /// Onglet des informations personnelles (votre code actuel)
+  Widget _buildInfoTab() {
+    return RefreshIndicator(
+      onRefresh: _loadProfile,
+      color: const Color(0xFF5B9FD8),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            const SizedBox(height: 24),
+
+            // Section : Informations personnelles
+            ProfileInfoSection(
+              profile: _profile!,
+              onEditPressed: _openEditDialog,
+            ),
+
+            const SizedBox(height: 16),
+
+            // Section : Changer le mot de passe
+            _buildPasswordSection(),
+
+            const SizedBox(height: 16),
+
+            // Section : Informations du compte
+            _buildAccountInfoSection(),
+
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPasswordSection() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -212,10 +255,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         title: const Text(
           'Changer le mot de passe',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         subtitle: const Text(
           'Sécurisez votre compte',
@@ -227,7 +267,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  /// Widget pour les informations du compte
   Widget _buildAccountInfoSection() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -271,7 +310,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  /// Widget pour une ligne d'information
   Widget _buildInfoRow({
     required IconData icon,
     required String label,
@@ -283,10 +321,7 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(width: 12),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         const Spacer(),
         Text(

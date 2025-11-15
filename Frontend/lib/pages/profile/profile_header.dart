@@ -14,7 +14,7 @@ class ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16), // 🔧 FIX: Réduit de 24 à 16
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -30,11 +30,12 @@ class ProfileHeader extends StatelessWidget {
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min, // 🔧 FIX: Important!
         children: [
           // Avatar circulaire avec initiales
           Container(
-            width: 100,
-            height: 100,
+            width: 90, // 🔧 FIX: Réduit de 100 à 90
+            height: 90, // 🔧 FIX: Réduit de 100 à 90
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
@@ -50,7 +51,7 @@ class ProfileHeader extends StatelessWidget {
               child: Text(
                 _getInitials(),
                 style: const TextStyle(
-                  fontSize: 36,
+                  fontSize: 32, // 🔧 FIX: Réduit de 36 à 32
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF5B9FD8),
                 ),
@@ -58,16 +59,18 @@ class ProfileHeader extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12), // 🔧 FIX: Réduit de 16 à 12
 
           // Nom complet
           Text(
             profile.fullName,
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 22, // 🔧 FIX: Réduit de 24 à 22
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
+            maxLines: 1, // 🔧 FIX: Limite à une ligne
+            overflow: TextOverflow.ellipsis, // 🔧 FIX: Ellipsis si trop long
           ),
 
           const SizedBox(height: 4),
@@ -76,18 +79,20 @@ class ProfileHeader extends StatelessWidget {
           Text(
             profile.email,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13, // 🔧 FIX: Réduit de 14 à 13
               color: Colors.white.withOpacity(0.9),
             ),
+            maxLines: 1, // 🔧 FIX: Limite à une ligne
+            overflow: TextOverflow.ellipsis, // 🔧 FIX: Ellipsis si trop long
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10), // 🔧 FIX: Réduit de 12 à 10
 
           // Badge du niveau
           Container(
             padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
+              horizontal: 14, // 🔧 FIX: Réduit de 16 à 14
+              vertical: 7, // 🔧 FIX: Réduit de 8 à 7
             ),
             decoration: BoxDecoration(
               color: const Color(0xFFFDB33F),
@@ -98,17 +103,19 @@ class ProfileHeader extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.school,
-                  size: 16,
+                  size: 15, // 🔧 FIX: Réduit de 16 à 15
                   color: Colors.white,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   profile.niveau,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 13, // 🔧 FIX: Réduit de 14 à 13
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

@@ -382,4 +382,54 @@ public class ProgressService {
             default: return "📚";
         }
     }
+
+@Transactional
+public AddXpResponse addXp(Integer xpAmount, String reason, String source) {
+    User user = getCurrentUser();
+    UserProgress progress = getOrCreateUserProgress(user);
+    
+    // Sauvegarder l'ancien niveau pour vérifier si level up
+    Integer oldLevel = progress.getCurrentLevel();
+    Integer oldXp = progress.getTotalXp();
+    
+    // Ajouter l'XP
+    progress.addXp(xpAmount);
+    progress.setLastActivityDate(LocalDateTime.now());
+    
+    // Mettre à jour le streak
+    updateStreak(progress);
+    
+    // Sauvegarder les modifications
+    userProgressRepository.save(progress);
+    
+    // Vérifier si l'utilisateur a gagné un niveau
+    Boolean leveledUp = progress.getCurrentLevel() > oldLevel;
+    
+    // Construire le message
+    String message;
+    if (leveledUp) {
+        message = String.format(
+            "Félicitations ! Vous avez gagné %d XP et atteint le niveau %d (%s) !",
+            xpAmount,
+            progress.getCurrentLevel(),
+            getLevelTitle(progress.getCurrentLevel())
+        );
+    } else {
+        message = String.format("Vous avez gagné %d XP !", xpAmount);
+    }
+    
+    // Construire la réponse
+    return AddXpResponse.builder()
+        .xpAdded(xpAmount)
+        .totalXp(progress.getTotalXp())
+        .currentLevel(progress.getCurrentLevel())
+        .levelTitle(getLevelTitle(progress.getCurrentLevel()))
+        .xpForNextLevel(progress.getXpForNextLevel())
+        .xpProgressInCurrentLevel(progress.getXpProgressInCurrentLevel())
+        .progressPercentage(progress.getProgressPercentage())
+        .leveledUp(leveledUp)
+        .newLevel(leveledUp ? progress.getCurrentLevel() : null)
+        .message(message)
+        .build();
+}
 }
