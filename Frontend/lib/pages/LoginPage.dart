@@ -3,6 +3,7 @@ import 'SignUpPage.dart';
 import '../services/auth_service.dart';
 import 'login/login_form_fields.dart';
 import 'login/login_ui_components.dart';
+import 'package:smart_learn/pages/ForgotPasswordPage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -59,9 +60,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleForgotPassword() {
-    _showSnackBar(
-      'Fonctionnalité en cours de développement',
-      Colors.blue,
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
     );
   }
 

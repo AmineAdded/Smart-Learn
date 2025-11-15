@@ -6,13 +6,12 @@ import 'pages/LoginPage.dart';
 import 'pages/SignUpPage.dart';
 import 'pages/HomePage.dart';
 import 'pages/ProfilePage.dart';
+import 'pages/ForgotPasswordPage.dart';
+import 'pages/ResetPasswordPage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // 🟢 Charge le fichier .env AVANT le lancement de l'app
   await dotenv.load(fileName: ".env");
-
   runApp(const MyApp());
 }
 
@@ -29,14 +28,28 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Roboto',
       ),
 
-      // 🔗 Définition des routes
+      // Routes nommées
       routes: {
         '/': (context) => const SmartLearnSplashScreen(),
         '/onboarding': (context) => OnboardingPage(),
         '/login': (context) => LoginPage(),
         '/signup': (context) => SignUpPage(),
         '/home': (context) => const HomePage(),
-        '/profile': (context) => const ProfilePage()
+        '/profile': (context) => const ProfilePage(),
+        '/forgot-password': (context) => const ForgotPasswordPage(),
+      },
+
+      // Route avec paramètre pour la réinitialisation
+      onGenerateRoute: (settings) {
+        if (settings.name == '/reset-password') {
+          final token = settings.arguments as String?;
+          if (token != null) {
+            return MaterialPageRoute(
+              builder: (context) => ResetPasswordPage(token: token),
+            );
+          }
+        }
+        return null;
       },
 
       initialRoute: '/',
