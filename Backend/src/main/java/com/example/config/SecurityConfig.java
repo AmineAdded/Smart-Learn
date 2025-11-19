@@ -60,8 +60,20 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // Endpoints publics (sans authentification)
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+
+                        // Endpoints protégés (nécessitent authentification JWT)
+                        .requestMatchers("/api/interests/**").authenticated()
+                        .requestMatchers("/api/progress/**").authenticated()
+                        .requestMatchers("/api/profile/**").authenticated()
+                        .requestMatchers("/api/user/**").authenticated()
+                        .requestMatchers("/api/quiz/**").authenticated()
+                        .requestMatchers("/api/videos/**").authenticated()
+
+                        // Tout le reste nécessite une authentification
                         .anyRequest().authenticated()
                 );
 

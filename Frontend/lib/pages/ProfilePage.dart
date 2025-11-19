@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/profile_model.dart';
 import '../services/profile_service.dart';
+import 'interests_selection_screen.dart';
 import 'profile/profile_header.dart';
 import 'profile/profile_info_section.dart';
 import 'profile/profile_edit_dialog.dart';
@@ -83,6 +84,14 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     if (success == true) {
       _showSuccessSnackBar('Mot de passe modifié avec succès');
     }
+  }
+
+  Future<void> _openInterestsManagement() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const InterestsSelectionScreen(),
+      ),
+    );
   }
 
   void _showErrorSnackBar(String message) {
@@ -213,6 +222,11 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
             const SizedBox(height: 16),
 
+            // NOUVELLE SECTION : Gérer mes intérêts
+            _buildInterestsSection(),
+
+            const SizedBox(height: 16),
+
             // Section : Informations du compte
             _buildAccountInfoSection(),
 
@@ -263,6 +277,50 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: _openPasswordDialog,
+      ),
+    );
+  }
+
+  Widget _buildInterestsSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 12,
+        ),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF00B894).withOpacity(0.1), // Vert sympa pour les intérêts
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.favorite_border,
+            color: Color(0xFF00B894),
+          ),
+        ),
+        title: const Text(
+          'Gérer mes intérêts',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        subtitle: const Text(
+          'Choisissez les sujets qui vous passionnent',
+          style: TextStyle(fontSize: 13),
+        ),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: _openInterestsManagement,
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'interests_selection_screen.dart';
 import 'signup/signup_form_fields.dart';
 import 'signup/signup_ui_components.dart';
 
@@ -86,7 +87,12 @@ class _SignUpPageState extends State<SignUpPage> {
 
           // Navigation vers la page d'accueil
           if (mounted) {
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => InterestsSelectionScreen(isOnboarding: true),
+              ),
+            );
           }
         } else {
           print('❌ Erreur d\'inscription: ${result['message']}');

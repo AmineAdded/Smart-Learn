@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'pages/interests_selection_screen.dart';
 import 'onboarding_page.dart';
 import 'pages/LoginPage.dart';
 import 'pages/SignUpPage.dart';
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomePage(),
         '/profile': (context) => const ProfilePage(),
         '/forgot-password': (context) => const ForgotPasswordPage(),
+        '/interests-selection': (context) => const InterestsSelectionScreen()
       },
 
       // Route avec paramètre pour la réinitialisation
