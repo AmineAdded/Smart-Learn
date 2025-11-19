@@ -11,6 +11,9 @@ import 'pages/LoginPage.dart';
 import 'pages/SignUpPage.dart';
 import 'pages/HomePage.dart';
 import 'pages/ProfilePage.dart';
+import 'pages/ForgotPasswordPage.dart';
+import 'pages/ResetPasswordPage.dart';
+
 import 'pages/SettingsPage.dart';
 import 'pages/ProgressionPage.dart';
 Future<void> main() async {
@@ -18,6 +21,7 @@ Future<void> main() async {
 
   // Charger le fichier .env
   await dotenv.load(fileName: ".env");
+  runApp(const MyApp());
 
   runApp(
     /// MultiProvider pour gérer thème ET langue
@@ -49,6 +53,7 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeProvide.darkTheme,
       themeMode: themeProvider.themeMode,
 
+      // Routes nommées
       // ✅ LOCALISATION
       locale: localeProvider.locale,
       localizationsDelegates: const [
@@ -67,8 +72,22 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => const SignUpPage(),
         '/home': (context) => const HomePage(),
         '/profile': (context) => const ProfilePage(),
+        '/forgot-password': (context) => const ForgotPasswordPage(),
         '/progression': (context) => const ProgressionPage(),
         '/settings': (context) => const SettingsPage(),
+      },
+
+      // Route avec paramètre pour la réinitialisation
+      onGenerateRoute: (settings) {
+        if (settings.name == '/reset-password') {
+          final token = settings.arguments as String?;
+          if (token != null) {
+            return MaterialPageRoute(
+              builder: (context) => ResetPasswordPage(token: token),
+            );
+          }
+        }
+        return null;
       },
 
       initialRoute: '/',

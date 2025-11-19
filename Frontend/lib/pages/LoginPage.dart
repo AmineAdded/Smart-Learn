@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'SignUpPage.dart';
 import '../services/auth_service.dart';
 import 'login/login_form_fields.dart';
 import 'login/login_ui_components.dart';
+import 'package:smart_learn/pages/ForgotPasswordPage.dart';
 import '../l10n/app_localizations.dart'; // ✅ Importé
 
 class LoginPage extends StatefulWidget {
@@ -61,6 +63,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleForgotPassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+    );
     final l10n = AppLocalizations.of(context)!;
     _showSnackBar(l10n.featureInDevelopment, Colors.blue);
   }
