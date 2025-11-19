@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/profile_model.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Widget pour afficher les informations personnelles du profil
 class ProfileInfoSection extends StatelessWidget {
@@ -7,18 +8,20 @@ class ProfileInfoSection extends StatelessWidget {
   final VoidCallback onEditPressed;
 
   const ProfileInfoSection({
-    Key? key,
+    super.key,
     required this.profile,
     required this.onEditPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -31,62 +34,53 @@ class ProfileInfoSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Titre avec bouton modifier
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Informations personnelles',
+              Text(
+                l10n.personalInfo,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3436),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
               IconButton(
                 onPressed: onEditPressed,
-                icon: const Icon(
+                icon: Icon(
                   Icons.edit,
-                  color: Color(0xFF5B9FD8),
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-                tooltip: 'Modifier',
+                tooltip: l10n.editButton,
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
-          // Nom
           _buildInfoItem(
+            context,
             icon: Icons.person_outline,
-            label: 'Nom',
+            label: l10n.lastName,
             value: profile.nom,
           ),
-
           const SizedBox(height: 16),
-
-          // Prénom
           _buildInfoItem(
+            context,
             icon: Icons.person_outline,
-            label: 'Prénom',
+            label: l10n.firstName,
             value: profile.prenom,
           ),
-
           const SizedBox(height: 16),
-
-          // Email
           _buildInfoItem(
+            context,
             icon: Icons.email_outlined,
-            label: 'Email',
+            label: l10n.email,
             value: profile.email,
           ),
-
           const SizedBox(height: 16),
-
-          // Niveau
           _buildInfoItem(
+            context,
             icon: Icons.school_outlined,
-            label: 'Niveau d\'études',
+            label: l10n.educationLevel,
             value: profile.niveau,
           ),
         ],
@@ -95,11 +89,12 @@ class ProfileInfoSection extends StatelessWidget {
   }
 
   /// Widget pour un élément d'information
-  Widget _buildInfoItem({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
+  Widget _buildInfoItem(
+      BuildContext context, {
+        required IconData icon,
+        required String label,
+        required String value,
+      }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

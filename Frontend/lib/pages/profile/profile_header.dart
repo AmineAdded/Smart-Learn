@@ -1,28 +1,28 @@
+// lib/widgets/profile/profile_header.dart
 import 'package:flutter/material.dart';
 import '../../models/profile_model.dart';
+import '../../../l10n/app_localizations.dart';
 
-/// Widget pour afficher l'en-tête du profil avec l'avatar et le nom
 class ProfileHeader extends StatelessWidget {
   final ProfileModel profile;
 
   const ProfileHeader({
-    Key? key,
+    super.key,
     required this.profile,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16), // 🔧 FIX: Réduit de 24 à 16
+      padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF5B9FD8),
-            Color(0xFF4A8BC2),
-          ],
+          colors: [Color(0xFF5B9FD8), Color(0xFF4A8BC2)],
         ),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(32),
@@ -30,14 +30,14 @@ class ProfileHeader extends StatelessWidget {
         ),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // 🔧 FIX: Important!
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Avatar circulaire avec initiales
+          // Avatar avec initiales
           Container(
-            width: 90, // 🔧 FIX: Réduit de 100 à 90
-            height: 90, // 🔧 FIX: Réduit de 100 à 90
+            width: 90,
+            height: 90,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -51,7 +51,7 @@ class ProfileHeader extends StatelessWidget {
               child: Text(
                 _getInitials(),
                 style: const TextStyle(
-                  fontSize: 32, // 🔧 FIX: Réduit de 36 à 32
+                  fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF5B9FD8),
                 ),
@@ -59,18 +59,18 @@ class ProfileHeader extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 12), // 🔧 FIX: Réduit de 16 à 12
+          const SizedBox(height: 12),
 
           // Nom complet
           Text(
             profile.fullName,
             style: const TextStyle(
-              fontSize: 22, // 🔧 FIX: Réduit de 24 à 22
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
-            maxLines: 1, // 🔧 FIX: Limite à une ligne
-            overflow: TextOverflow.ellipsis, // 🔧 FIX: Ellipsis si trop long
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
 
           const SizedBox(height: 4),
@@ -79,21 +79,18 @@ class ProfileHeader extends StatelessWidget {
           Text(
             profile.email,
             style: TextStyle(
-              fontSize: 13, // 🔧 FIX: Réduit de 14 à 13
+              fontSize: 13,
               color: Colors.white.withOpacity(0.9),
             ),
-            maxLines: 1, // 🔧 FIX: Limite à une ligne
-            overflow: TextOverflow.ellipsis, // 🔧 FIX: Ellipsis si trop long
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
 
-          const SizedBox(height: 10), // 🔧 FIX: Réduit de 12 à 10
+          const SizedBox(height: 10),
 
-          // Badge du niveau
+          // Badge niveau (le texte du niveau vient déjà traduit du backend)
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14, // 🔧 FIX: Réduit de 16 à 14
-              vertical: 7, // 🔧 FIX: Réduit de 8 à 7
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
             decoration: BoxDecoration(
               color: const Color(0xFFFDB33F),
               borderRadius: BorderRadius.circular(20),
@@ -101,21 +98,15 @@ class ProfileHeader extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.school,
-                  size: 15, // 🔧 FIX: Réduit de 16 à 15
-                  color: Colors.white,
-                ),
+                const Icon(Icons.school, size: 15, color: Colors.white),
                 const SizedBox(width: 6),
                 Text(
                   profile.niveau,
                   style: const TextStyle(
-                    fontSize: 13, // 🔧 FIX: Réduit de 14 à 13
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -125,7 +116,6 @@ class ProfileHeader extends StatelessWidget {
     );
   }
 
-  /// Obtenir les initiales du prénom et du nom
   String _getInitials() {
     String initials = '';
     if (profile.prenom.isNotEmpty) {
@@ -134,6 +124,6 @@ class ProfileHeader extends StatelessWidget {
     if (profile.nom.isNotEmpty) {
       initials += profile.nom[0].toUpperCase();
     }
-    return initials;
+    return initials.isEmpty ? '?' : initials;
   }
 }

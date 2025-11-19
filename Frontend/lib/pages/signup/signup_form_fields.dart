@@ -6,10 +6,10 @@ class NomField extends StatelessWidget {
   final bool isLoading;
 
   const NomField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.isLoading,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -49,10 +49,10 @@ class PrenomField extends StatelessWidget {
   final bool isLoading;
 
   const PrenomField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.isLoading,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -92,10 +92,10 @@ class EmailField extends StatelessWidget {
   final bool isLoading;
 
   const EmailField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.isLoading,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -140,17 +140,17 @@ class NiveauDropdown extends StatelessWidget {
   final Function(String?) onChanged;
 
   const NiveauDropdown({
-    Key? key,
+    super.key,
     required this.selectedNiveau,
     required this.niveaux,
     required this.isLoading,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: selectedNiveau,
+      initialValue: selectedNiveau,
       decoration: InputDecoration(
         labelText: 'Niveau d\'études',
         prefixIcon: const Icon(Icons.school_outlined),
@@ -193,13 +193,13 @@ class PasswordField extends StatefulWidget {
   final String? Function(String?)? validator;
 
   const PasswordField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.isLoading,
     this.labelText = 'Mot de passe',
     this.hintText = 'Min. 8 caractères',
     this.validator,
-  }) : super(key: key);
+  });
 
   @override
   State<PasswordField> createState() => _PasswordFieldState();

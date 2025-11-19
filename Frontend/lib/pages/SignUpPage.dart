@@ -5,7 +5,7 @@ import 'signup/signup_form_fields.dart';
 import 'signup/signup_ui_components.dart';
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({Key? key}) : super(key: key);
+  const SignUpPage({super.key});
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -135,8 +135,8 @@ class _SignUpPageState extends State<SignUpPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: Row(
-          children: const [
+        title: const Row(
+          children: [
             Icon(Icons.error_outline, color: Colors.red, size: 28),
             SizedBox(width: 12),
             Text('Erreur d\'inscription'),
@@ -156,7 +156,7 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // ✅ Changé
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

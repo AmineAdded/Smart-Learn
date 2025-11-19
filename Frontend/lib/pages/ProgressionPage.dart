@@ -1,23 +1,22 @@
-// lib/widgets/profile/profile_stats_tab.dart
 import 'package:flutter/material.dart';
-import '../../services/progress_service.dart';
-import '../../models/user_progress.dart';
-import '../../models/statistics.dart';
-import '../../../l10n/app_localizations.dart';
-import 'profile_level_card.dart';
-import 'profile_stats_cards.dart';
-import 'profile_chart.dart';
-import 'profile_achievements.dart';
+import '../services/progress_service.dart';
+import '../models/user_progress.dart';
+import '../models/statistics.dart';
+import '../l10n/app_localizations.dart';
+import 'profile/profile_level_card.dart';
+import 'profile/profile_stats_cards.dart';
+import 'profile/profile_chart.dart';
+import 'profile/profile_achievements.dart';
 
-/// Onglet des statistiques de progression
-class ProfileStatsTab extends StatefulWidget {
-  const ProfileStatsTab({super.key});
+/// Page dédiée à la progression et aux statistiques de l'utilisateur
+class ProgressionPage extends StatefulWidget {
+  const ProgressionPage({super.key});
 
   @override
-  State<ProfileStatsTab> createState() => _ProfileStatsTabState();
+  State<ProgressionPage> createState() => _ProgressionPageState();
 }
 
-class _ProfileStatsTabState extends State<ProfileStatsTab> {
+class _ProgressionPageState extends State<ProgressionPage> {
   final _progressService = ProgressService();
 
   UserProgress? _userProgress;
@@ -41,28 +40,34 @@ class _ProfileStatsTabState extends State<ProfileStatsTab> {
     });
 
     try {
+      // Charger le progrès utilisateur
       final progressResult = await _progressService.getUserProgress();
       if (progressResult['success']) {
         _userProgress = progressResult['data'];
       }
 
+      // Charger les statistiques détaillées
       final statsResult = await _progressService.getStatistics();
       if (statsResult['success']) {
         _statistics = statsResult['data'];
       }
 
+      // Charger la progression hebdomadaire
       final weeklyResult = await _progressService.getWeeklyProgress();
       if (weeklyResult['success']) {
         _weeklyProgress = weeklyResult['data'];
       }
 
-      setState(() => _isLoading = false);
-    } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = AppLocalizations.of(context)!.errorLoadingData;
       });
-      debugPrint('Erreur chargement stats: $e');
+    } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = l10n.errorLoadingData;
+      });
+      print('Erreur: $e');
     }
   }
 
@@ -70,7 +75,34 @@ class _ProfileStatsTabState extends State<ProfileStatsTab> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    // Écran de chargement
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF5B9FD8),
+        elevation: 0,
+        title: Text(
+          l10n.myProgress,
+          style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(
+              Icons.arrow_back,
+              color: Colors.white
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_isLoading) {
       return Center(
         child: Column(
@@ -87,39 +119,34 @@ class _ProfileStatsTabState extends State<ProfileStatsTab> {
       );
     }
 
-    // Écran d'erreur
     if (_errorMessage != null) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                style: const TextStyle(fontSize: 16, color: Color(0xFF636E72)),
-                textAlign: TextAlign.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              style: const TextStyle(fontSize: 16, color: Color(0xFF636E72)),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _loadAllData,
+              icon: const Icon(Icons.refresh),
+              label: Text(l10n.retryButton),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF5B9FD8),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _loadAllData,
-                icon: const Icon(Icons.refresh),
-                label: Text(l10n.retryButton),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5B9FD8),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
 
-    // Contenu principal
     return RefreshIndicator(
       onRefresh: _loadAllData,
       color: const Color(0xFF5B9FD8),
@@ -130,7 +157,7 @@ class _ProfileStatsTabState extends State<ProfileStatsTab> {
           children: [
             const SizedBox(height: 24),
 
-            // Carte de niveau
+            // Carte de niveau avec progression
             if (_userProgress != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -145,7 +172,7 @@ class _ProfileStatsTabState extends State<ProfileStatsTab> {
 
             const SizedBox(height: 24),
 
-            // Cartes de statistiques
+            // Statistiques principales
             if (_userProgress != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -170,27 +197,25 @@ class _ProfileStatsTabState extends State<ProfileStatsTab> {
 
             const SizedBox(height: 32),
 
-            // Objectifs et classement
+            // Réalisations et badges
             if (_statistics != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: ProfileAchievements(
-                  goals: _statistics!.goals
-                      .map((goal) => {
+                  goals: _statistics!.goals.map((goal) => {
                     'title': goal.title,
                     'description': goal.description,
                     'current': goal.current,
                     'target': goal.target,
                     'progress': goal.progress,
                     'completed': goal.completed,
-                  })
-                      .toList(),
+                  }).toList(),
                   globalRank: _statistics!.globalRank,
                   totalUsers: _statistics!.totalUsers,
                 ),
               ),
 
-            const SizedBox(height: 100), // Espace pour le scroll
+            const SizedBox(height: 100),
           ],
         ),
       ),

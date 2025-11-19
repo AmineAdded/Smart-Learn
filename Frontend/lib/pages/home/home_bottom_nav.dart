@@ -7,10 +7,10 @@ class CustomBottomNavigationBar extends StatelessWidget {
   final Function(int) onTap;
 
   const CustomBottomNavigationBar({
-    Key? key,
+    super.key,
     required this.currentIndex,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +72,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ProfilePage()),
+                      MaterialPageRoute(builder: (context) => const ProfilePage()),
                     );
                   },
                 ),

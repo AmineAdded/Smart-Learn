@@ -8,19 +8,19 @@ class WelcomeHeader extends StatelessWidget {
   final VoidCallback onNotificationTap;
 
   const WelcomeHeader({
-    Key? key,
+    super.key,
     required this.userName,
     required this.currentLevel,
     required this.progressPercentage,
     required this.onNotificationTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
@@ -28,7 +28,7 @@ class WelcomeHeader extends StatelessWidget {
             Color(0xFF4A8BC2),
           ],
         ),
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),
         ),
@@ -171,10 +171,10 @@ class SectionHeader extends StatelessWidget {
   final VoidCallback onSeeAllTap;
 
   const SectionHeader({
-    Key? key,
+    super.key,
     required this.title,
     required this.onSeeAllTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -216,7 +216,7 @@ class QuizCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const QuizCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.icon,
     required this.questionCount,
@@ -224,7 +224,7 @@ class QuizCard extends StatelessWidget {
     this.completionPercentage,
     this.hasAI = false,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   Color _getDifficultyColor() {
     switch (difficulty.toLowerCase()) {
@@ -284,8 +284,8 @@ class QuizCard extends StatelessWidget {
                       color: const Color(0xFF6C5CE7).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         Icon(
                           Icons.auto_awesome,
                           size: 12,
@@ -389,13 +389,13 @@ class VideoCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const VideoCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.thumbnail,
     required this.duration,
     this.isNew = false,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
