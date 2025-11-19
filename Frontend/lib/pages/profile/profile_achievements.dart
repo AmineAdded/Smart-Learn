@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
-/// Section des objectifs et classement global
 class ProfileAchievements extends StatelessWidget {
   final List<Map<String, dynamic>> goals;
   final int globalRank;
   final int totalUsers;
 
   const ProfileAchievements({
-    Key? key,
+    super.key,
     required this.goals,
     required this.globalRank,
     required this.totalUsers,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Objectifs et Classement',
-          style: TextStyle(
+        Text(
+          l10n.goalsAndRanking,
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Color(0xFF2D3436),
@@ -28,17 +30,14 @@ class ProfileAchievements extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Carte de classement
+        // Carte classement global
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFFFDB33F),
-                Color(0xFFE9A72F),
-              ],
+              colors: [Color(0xFFFDB33F), Color(0xFFE9A72F)],
             ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
@@ -53,44 +52,26 @@ class ProfileAchievements extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.emoji_events,
-                  color: Color(0xFFFDB33F),
-                  size: 32,
-                ),
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                child: const Icon(Icons.emoji_events, color: Color(0xFFFDB33F), size: 32),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Classement global',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Text(
+                      l10n.globalRankLabel,
+                      style: const TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '#$globalRank',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     Text(
-                      'sur $totalUsers utilisateurs',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.white70,
-                      ),
+                      '${l10n.outOf} $totalUsers ${l10n.questions}', // "sur X utilisateurs"
+                      style: const TextStyle(fontSize: 12, color: Colors.white70),
                     ),
                   ],
                 ),
@@ -109,13 +90,12 @@ class ProfileAchievements extends StatelessWidget {
           target: goal['target'] ?? 100,
           progress: (goal['progress'] ?? 0).toDouble(),
           completed: goal['completed'] ?? false,
-        )).toList(),
+        )),
       ],
     );
   }
 }
 
-/// Carte d'objectif individuel
 class _GoalCard extends StatelessWidget {
   final String title;
   final String description;
@@ -146,11 +126,7 @@ class _GoalCard extends StatelessWidget {
           width: 2,
         ),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -173,26 +149,17 @@ class _GoalCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: completed
-                            ? const Color(0xFF00B894)
-                            : const Color(0xFF2D3436),
+                        color: completed ? const Color(0xFF00B894) : const Color(0xFF2D3436),
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      description,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    ),
+                    Text(description, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
                   ],
                 ),
               ),
               Text(
                 '$current/$target',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[700]),
               ),
             ],
           ),

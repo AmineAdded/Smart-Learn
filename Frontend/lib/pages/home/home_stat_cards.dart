@@ -8,19 +8,19 @@ class StatCard extends StatelessWidget {
   final Color color;
 
   const StatCard({
-    Key? key,
+    super.key,
     required this.icon,
     required this.value,
     required this.label,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+          color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -76,11 +76,11 @@ class StatsGrid extends StatelessWidget {
   final String studyTime;
 
   const StatsGrid({
-    Key? key,
+    super.key,
     required this.xp,
     required this.quizCompleted,
     required this.studyTime,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

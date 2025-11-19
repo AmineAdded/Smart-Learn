@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Carte affichant le niveau actuel et la progression
 class ProfileLevelCard extends StatelessWidget {
@@ -9,13 +10,13 @@ class ProfileLevelCard extends StatelessWidget {
   final double progressPercentage;
 
   const ProfileLevelCard({
-    Key? key,
+    super.key,
     required this.currentLevel,
     required this.levelTitle,
     required this.currentXp,
     required this.xpForNextLevel,
     required this.progressPercentage,
-  }) : super(key: key);
+  });
 
   String _getLevelIcon() {
     if (currentLevel >= 20) return '👑';
@@ -27,6 +28,8 @@ class ProfileLevelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -41,7 +44,7 @@ class ProfileLevelCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6C5CE7).withOpacity(0.3),
+            color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -56,9 +59,9 @@ class ProfileLevelCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Niveau actuel',
-                    style: TextStyle(
+                  Text(
+                    l10n.currentLevel,
+                    style: const TextStyle(
                       fontSize: 14,
                       color: Colors.white70,
                       fontWeight: FontWeight.w500,
@@ -76,7 +79,7 @@ class ProfileLevelCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Niveau $currentLevel',
+                            '${l10n.level} $currentLevel',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -107,7 +110,7 @@ class ProfileLevelCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Progression vers niveau ${currentLevel + 1}',
+                    '${l10n.progressToNextLevel} ${currentLevel + 1}',
                     style: const TextStyle(
                       fontSize: 13,
                       color: Colors.white70,

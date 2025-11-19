@@ -1,42 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import '../l10n/app_localizations.dart';
 
+import 'providers/theme_provide.dart';
+import 'providers/locale_provider.dart';
 import 'onboarding_page.dart';
 import 'pages/LoginPage.dart';
 import 'pages/SignUpPage.dart';
 import 'pages/HomePage.dart';
 import 'pages/ProfilePage.dart';
-
+import 'pages/SettingsPage.dart';
+import 'pages/ProgressionPage.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 🟢 Charge le fichier .env AVANT le lancement de l'app
+  // Charger le fichier .env
   await dotenv.load(fileName: ".env");
 
-  runApp(const MyApp());
+  runApp(
+    /// MultiProvider pour gérer thème ET langue
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvide()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Récupérer les providers
+    final themeProvider = Provider.of<ThemeProvide>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'SmartLearn',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Roboto',
-      ),
 
-      // 🔗 Définition des routes
+      // ✅ THÈME DYNAMIQUE
+      theme: ThemeProvide.lightTheme,
+      darkTheme: ThemeProvide.darkTheme,
+      themeMode: themeProvider.themeMode,
+
+      // ✅ LOCALISATION
+      locale: localeProvider.locale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: LocaleProvider.supportedLocales,
+
+      // Routes
       routes: {
         '/': (context) => const SmartLearnSplashScreen(),
-        '/onboarding': (context) => OnboardingPage(),
-        '/login': (context) => LoginPage(),
-        '/signup': (context) => SignUpPage(),
+        '/onboarding': (context) => const OnboardingPage(),
+        '/login': (context) => const LoginPage(),
+        '/signup': (context) => const SignUpPage(),
         '/home': (context) => const HomePage(),
-        '/profile': (context) => const ProfilePage()
+        '/profile': (context) => const ProfilePage(),
+        '/progression': (context) => const ProgressionPage(),
+        '/settings': (context) => const SettingsPage(),
       },
 
       initialRoute: '/',
@@ -45,7 +77,7 @@ class MyApp extends StatelessWidget {
 }
 
 class SmartLearnSplashScreen extends StatefulWidget {
-  const SmartLearnSplashScreen({Key? key}) : super(key: key);
+  const SmartLearnSplashScreen({super.key});
 
   @override
   State<SmartLearnSplashScreen> createState() => _SmartLearnSplashScreenState();
@@ -71,7 +103,6 @@ class _SmartLearnSplashScreenState extends State<SmartLearnSplashScreen>
 
     _animationController.forward();
 
-    // Navigation automatique vers OnboardingPage après 3 secondes
     Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushReplacementNamed(context, '/onboarding');
     });

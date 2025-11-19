@@ -1,42 +1,30 @@
 import 'package:flutter/material.dart';
 import '../models/profile_model.dart';
 import '../services/profile_service.dart';
-import 'profile/profile_header.dart';
+import '../l10n/app_localizations.dart';
 import 'profile/profile_info_section.dart';
 import 'profile/profile_edit_dialog.dart';
 import 'profile/profile_password_dialog.dart';
-import 'profile/profile_stats_tab.dart';
 
-/// Page principale du profil avec système d'onglets
-/// Onglet 1 : Informations personnelles
-/// Onglet 2 : Statistiques et progression
+/// Page du profil utilisateur - Informations personnelles uniquement
+/// Les statistiques ont été déplacées vers ProgressionPage
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStateMixin {
+class _ProfilePageState extends State<ProfilePage> {
   final _profileService = ProfileService();
 
   ProfileModel? _profile;
   bool _isLoading = true;
 
-  // Controller pour les onglets
-  late TabController _tabController;
-
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _loadProfile();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   /// Charger le profil utilisateur
@@ -68,8 +56,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     );
 
     if (result != null) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() => _profile = result);
-      _showSuccessSnackBar('Profil mis à jour avec succès');
+      _showSuccessSnackBar(l10n.profileUpdatedSuccess);
     }
   }
 
@@ -81,7 +70,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     );
 
     if (success == true) {
-      _showSuccessSnackBar('Mot de passe modifié avec succès');
+      final l10n = AppLocalizations.of(context)!;
+      _showSuccessSnackBar(l10n.passwordChangedSuccess);
     }
   }
 
@@ -107,9 +97,11 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: const Center(
           child: CircularProgressIndicator(color: Color(0xFF5B9FD8)),
         ),
@@ -118,18 +110,18 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
     if (_profile == null) {
       return Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
-              const Text('Impossible de charger le profil'),
+              Text(l10n.unableToLoadProfile),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadProfile,
-                child: const Text('Réessayer'),
+                child: Text(l10n.retryButton),
               ),
             ],
           ),
@@ -138,96 +130,178 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            // AppBar avec onglets
-            SliverAppBar(
-              expandedHeight: 200,
-              floating: false,
-              pinned: true,
-              backgroundColor: const Color(0xFF5B9FD8),
-              flexibleSpace: FlexibleSpaceBar(
-                background: ProfileHeader(profile: _profile!),
-              ),
-              bottom: TabBar(
-                controller: _tabController,
-                indicatorColor: Colors.white,
-                indicatorWeight: 3,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white70,
-                labelStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-                tabs: const [
-                  Tab(
-                    icon: Icon(Icons.person),
-                    text: 'Informations',
-                  ),
-                  Tab(
-                    icon: Icon(Icons.bar_chart),
-                    text: 'Statistiques',
-                  ),
-                ],
-              ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        elevation: 0,
+        title: Text(
+          l10n.myProfileTitle,
+          style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).appBarTheme.iconTheme?.color,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.settings,
+              color: Theme.of(context).appBarTheme.iconTheme?.color,
             ),
-          ];
-        },
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            // Onglet 1 : Informations personnelles
-            _buildInfoTab(),
+            onPressed: () {
+              Navigator.pushNamed(context, '/settings');
+            },
+            tooltip: l10n.settings,
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadProfile,
+        color: Theme.of(context).colorScheme.primary,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              // En-tête avec avatar
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          _getInitials(),
+                          style: TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _profile!.fullName,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _profile!.email,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.tertiary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.school,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.onTertiary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _profile!.niveau,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.onTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-            // Onglet 2 : Statistiques
-            ProfileStatsTab(),
-          ],
+              const SizedBox(height: 24),
+
+              // Section : Informations personnelles
+              ProfileInfoSection(
+                profile: _profile!,
+                onEditPressed: _openEditDialog,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Section : Changer le mot de passe
+              _buildPasswordSection(),
+
+              const SizedBox(height: 16),
+
+              // Section : Informations du compte
+              _buildAccountInfoSection(),
+
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  /// Onglet des informations personnelles (votre code actuel)
-  Widget _buildInfoTab() {
-    return RefreshIndicator(
-      onRefresh: _loadProfile,
-      color: const Color(0xFF5B9FD8),
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-
-            // Section : Informations personnelles
-            ProfileInfoSection(
-              profile: _profile!,
-              onEditPressed: _openEditDialog,
-            ),
-
-            const SizedBox(height: 16),
-
-            // Section : Changer le mot de passe
-            _buildPasswordSection(),
-
-            const SizedBox(height: 16),
-
-            // Section : Informations du compte
-            _buildAccountInfoSection(),
-
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
-    );
+  /// Obtenir les initiales du prénom et du nom
+  String _getInitials() {
+    String initials = '';
+    if (_profile!.prenom.isNotEmpty) {
+      initials += _profile!.prenom[0].toUpperCase();
+    }
+    if (_profile!.nom.isNotEmpty) {
+      initials += _profile!.nom[0].toUpperCase();
+    }
+    return initials;
   }
 
   Widget _buildPasswordSection() {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -245,21 +319,21 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: const Color(0xFF6C5CE7).withOpacity(0.1),
+            color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.lock_outline,
-            color: Color(0xFF6C5CE7),
+            color: Theme.of(context).colorScheme.secondary,
           ),
         ),
-        title: const Text(
-          'Changer le mot de passe',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        title: Text(
+          l10n.changePasswordTitle,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
-        subtitle: const Text(
-          'Sécurisez votre compte',
-          style: TextStyle(fontSize: 13),
+        subtitle: Text(
+          l10n.secureYourAccount,
+          style: const TextStyle(fontSize: 13),
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: _openPasswordDialog,
@@ -268,11 +342,13 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   }
 
   Widget _buildAccountInfoSection() {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -285,24 +361,24 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Informations du compte',
+          Text(
+            l10n.accountInformation,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3436),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           const SizedBox(height: 16),
           _buildInfoRow(
             icon: Icons.badge_outlined,
-            label: 'Rôle',
+            label: l10n.role,
             value: _profile!.role,
           ),
           const Divider(height: 24),
           _buildInfoRow(
             icon: Icons.calendar_today,
-            label: 'Membre depuis',
+            label: l10n.memberSince,
             value: _profile!.createdAt,
           ),
         ],
@@ -326,10 +402,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         const Spacer(),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF2D3436),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
       ],

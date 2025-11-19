@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Widget pour l'en-tête de la page d'inscription
 class SignUpHeader extends StatelessWidget {
-  const SignUpHeader({Key? key}) : super(key: key);
+  const SignUpHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,11 +37,11 @@ class TermsCheckbox extends StatelessWidget {
   final Function(bool) onChanged;
 
   const TermsCheckbox({
-    Key? key,
+    super.key,
     required this.acceptTerms,
     required this.isLoading,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -102,10 +102,10 @@ class SignUpButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   const SignUpButton({
-    Key? key,
+    super.key,
     required this.isLoading,
     required this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +145,7 @@ class SignUpButton extends StatelessWidget {
 
 /// Widget pour le séparateur "OU"
 class OrDivider extends StatelessWidget {
-  const OrDivider({Key? key}) : super(key: key);
+  const OrDivider({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -174,10 +174,10 @@ class GoogleSignUpButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   const GoogleSignUpButton({
-    Key? key,
+    super.key,
     required this.isLoading,
     required this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -218,10 +218,10 @@ class LoginLink extends StatelessWidget {
   final VoidCallback onTap;
 
   const LoginLink({
-    Key? key,
+    super.key,
     required this.isLoading,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

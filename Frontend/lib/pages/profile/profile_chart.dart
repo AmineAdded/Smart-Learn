@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
-/// Graphique de progression hebdomadaire
 class ProfileWeeklyChart extends StatelessWidget {
   final Map<String, dynamic> weeklyData;
 
   const ProfileWeeklyChart({
-    Key? key,
+    super.key,
     required this.weeklyData,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     final currentWeekXp = weeklyData['currentWeekXp'] ?? 0;
     final lastWeekXp = weeklyData['lastWeekXp'] ?? 0;
     final changePercentage = (weeklyData['changePercentage'] ?? 0).toDouble();
     final dailyProgress = (weeklyData['dailyProgress'] as List? ?? [])
         .cast<Map<String, dynamic>>();
 
-    // Trouver la valeur max pour normaliser les barres
     final maxXp = dailyProgress.isEmpty
         ? 1
         : dailyProgress
@@ -28,14 +29,13 @@ class ProfileWeeklyChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 🔧 FIX: Row avec Flexible pour éviter l'overflow
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Flexible(
+            Flexible(
               child: Text(
-                'Progression hebdomadaire',
-                style: TextStyle(
+                l10n.weeklyProgressLabel,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF2D3436),
@@ -45,10 +45,7 @@ class ProfileWeeklyChart extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: changePercentage >= 0
                     ? const Color(0xFF00B894).withOpacity(0.1)
@@ -59,9 +56,7 @@ class ProfileWeeklyChart extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    changePercentage >= 0
-                        ? Icons.trending_up
-                        : Icons.trending_down,
+                    changePercentage >= 0 ? Icons.trending_up : Icons.trending_down,
                     size: 16,
                     color: changePercentage >= 0
                         ? const Color(0xFF00B894)
@@ -85,11 +80,10 @@ class ProfileWeeklyChart extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Carte du graphique
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -101,18 +95,14 @@ class ProfileWeeklyChart extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // Résumé XP
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Column(
                     children: [
                       Text(
-                        'Cette semaine',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[600],
-                        ),
+                        l10n.thisWeek,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -125,19 +115,12 @@ class ProfileWeeklyChart extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.grey[300],
-                  ),
+                  Container(width: 1, height: 40, color: Colors.grey[300]),
                   Column(
                     children: [
                       Text(
-                        'Semaine passée',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[600],
-                        ),
+                        l10n.lastWeek,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -145,7 +128,7 @@ class ProfileWeeklyChart extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[400],
+                          color: Colors.grey[400]!,
                         ),
                       ),
                     ],
@@ -154,7 +137,6 @@ class ProfileWeeklyChart extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // Graphique à barres
               SizedBox(
                 height: 150,
                 child: Row(
@@ -179,16 +161,11 @@ class ProfileWeeklyChart extends StatelessWidget {
                                     ? const LinearGradient(
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.topCenter,
-                                  colors: [
-                                    Color(0xFF5B9FD8),
-                                    Color(0xFF4A8BC2),
-                                  ],
+                                  colors: [Color(0xFF5B9FD8), Color(0xFF4A8BC2)],
                                 )
                                     : null,
                                 color: hasActivity ? null : Colors.grey[200],
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(6),
-                                ),
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -197,9 +174,7 @@ class ProfileWeeklyChart extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: hasActivity
-                                    ? const Color(0xFF2D3436)
-                                    : Colors.grey[400],
+                                color: hasActivity ? const Color(0xFF2D3436) : Colors.grey[400],
                               ),
                             ),
                           ],
