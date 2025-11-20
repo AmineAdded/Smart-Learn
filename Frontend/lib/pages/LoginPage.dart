@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import 'login/login_form_fields.dart';
 import 'login/login_ui_components.dart';
 import 'package:smart_learn/pages/ForgotPasswordPage.dart';
+import '../l10n/app_localizations.dart'; // AJOUTÉ
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -28,62 +29,52 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+    if (!_formKey.currentState!.validate()) return;
 
-      try {
-        final result = await _authService.login(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await _authService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      setState(() => _isLoading = false);
+      if (!mounted) return;
+
+      if (result['success']) {
+        final l10n = AppLocalizations.of(context)!;
+        _showSnackBar(
+          l10n.loginSuccess(result['data']['prenom']),
+          Colors.green,
         );
-
-        setState(() => _isLoading = false);
-
-        if (!mounted) return;
-
-        if (result['success']) {
-          _showSnackBar(
-            'Connexion réussie ! Bienvenue ${result['data']['prenom']}',
-            Colors.green,
-          );
-
-          // Navigation vers la page d'accueil
-          Navigator.pushReplacementNamed(context, '/home');
-        } else {
-          _showErrorDialog(result['message']);
-        }
-      } catch (e) {
-        setState(() => _isLoading = false);
-        _showErrorDialog('Une erreur inattendue s\'est produite');
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        _showErrorDialog(result['message']);
       }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      final l10n = AppLocalizations.of(context)!;
+      _showErrorDialog(l10n.unexpectedError);
     }
   }
 
   void _handleForgotPassword() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+      MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
     );
   }
 
   void _handleGoogleLogin() {
-    _showSnackBar(
-      'Connexion Google en cours de développement',
-      Colors.blue,
-    );
-  }
-
-  void _handleAppleLogin() {
-    _showSnackBar(
-      'Connexion Apple en cours de développement',
-      Colors.blue,
-    );
+    final l10n = AppLocalizations.of(context)!;
+    _showSnackBar(l10n.featureInDevelopment, Colors.blue);
   }
 
   void _navigateToSignUp() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const SignUpPage()),
+      MaterialPageRoute(builder: (_) => const SignUpPage()),
     );
   }
 
@@ -93,32 +84,27 @@ class _LoginPageState extends State<LoginPage> {
         content: Text(message),
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
 
   void _showErrorDialog(String message) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: const [
-            Icon(Icons.error_outline, color: Colors.red, size: 28),
-            SizedBox(width: 12),
-            Text('Erreur de connexion'),
-          ],
-        ),
+      builder: (_) => AlertDialog(
+        backgroundColor: colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: Icon(Icons.error_outline, color: Colors.red, size: 28),
+        title: Text(l10n.loginError),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(l10n.ok, style: TextStyle(color: colorScheme.primary)),
           ),
         ],
       ),
@@ -127,8 +113,12 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      // Plus de Colors.white → compatible dark mode
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -140,59 +130,58 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const SizedBox(height: 60),
 
-                  // Logo et titre
-                  const LoginHeader(),
+                  // Composants déjà traduits
+                  LoginHeader(l10n: l10n),
 
                   const SizedBox(height: 48),
 
-                  // Formulaire
                   LoginEmailField(
                     controller: _emailController,
                     isLoading: _isLoading,
+                    l10n: l10n,
                   ),
                   const SizedBox(height: 16),
 
                   LoginPasswordField(
                     controller: _passwordController,
                     isLoading: _isLoading,
+                    l10n: l10n,
                   ),
 
                   const SizedBox(height: 12),
 
-                  // Mot de passe oublié
                   ForgotPasswordLink(
                     isLoading: _isLoading,
                     onPressed: _handleForgotPassword,
+                    l10n: l10n,
                   ),
 
                   const SizedBox(height: 32),
 
-                  // Bouton de connexion
                   LoginButton(
                     isLoading: _isLoading,
                     onPressed: _handleLogin,
+                    l10n: l10n,
                   ),
 
                   const SizedBox(height: 24),
 
-                  // Séparateur
-                  const LoginDivider(),
+                  LoginDivider(l10n: l10n),
 
                   const SizedBox(height: 24),
 
-                  // Connexion avec Google/Apple
                   SocialLoginButtons(
                     isLoading: _isLoading,
                     onGooglePressed: _handleGoogleLogin,
-                    onApplePressed: _handleAppleLogin,
+                    l10n: l10n,
                   ),
 
                   const SizedBox(height: 32),
 
-                  // Lien vers inscription
                   SignUpLink(
                     isLoading: _isLoading,
                     onTap: _navigateToSignUp,
+                    l10n: l10n,
                   ),
 
                   const SizedBox(height: 24),

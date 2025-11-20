@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
-/// Widget pour le champ Nom
+/// Champ Nom
 class NomField extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
+  final AppLocalizations l10n;
 
   const NomField({
     super.key,
     required this.controller,
     required this.isLoading,
+    required this.l10n,
   });
 
   @override
@@ -18,12 +21,10 @@ class NomField extends StatelessWidget {
       textCapitalization: TextCapitalization.words,
       enabled: !isLoading,
       decoration: InputDecoration(
-        labelText: 'Nom',
-        hintText: 'Votre nom',
+        labelText: l10n.lastName,
+        hintText: l10n.yourLastName,
         prefixIcon: const Icon(Icons.person_outline),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -33,25 +34,23 @@ class NomField extends StatelessWidget {
           borderSide: const BorderSide(color: Color(0xFF5B9FD8), width: 2),
         ),
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Veuillez entrer votre nom';
-        }
-        return null;
-      },
+      validator: (value) =>
+      value?.isEmpty ?? true ? l10n.lastNameRequired : null,
     );
   }
 }
 
-/// Widget pour le champ Prénom
+/// Champ Prénom
 class PrenomField extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
+  final AppLocalizations l10n;
 
   const PrenomField({
     super.key,
     required this.controller,
     required this.isLoading,
+    required this.l10n,
   });
 
   @override
@@ -61,12 +60,10 @@ class PrenomField extends StatelessWidget {
       textCapitalization: TextCapitalization.words,
       enabled: !isLoading,
       decoration: InputDecoration(
-        labelText: 'Prénom',
-        hintText: 'Votre prénom',
+        labelText: l10n.firstName,
+        hintText: l10n.yourFirstName,
         prefixIcon: const Icon(Icons.person_outline),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -76,25 +73,23 @@ class PrenomField extends StatelessWidget {
           borderSide: const BorderSide(color: Color(0xFF5B9FD8), width: 2),
         ),
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Veuillez entrer votre prénom';
-        }
-        return null;
-      },
+      validator: (value) =>
+      value?.isEmpty ?? true ? l10n.firstNameRequired : null,
     );
   }
 }
 
-/// Widget pour le champ Email
+/// Champ Email
 class EmailField extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
+  final AppLocalizations l10n;
 
   const EmailField({
     super.key,
     required this.controller,
     required this.isLoading,
+    required this.l10n,
   });
 
   @override
@@ -104,12 +99,10 @@ class EmailField extends StatelessWidget {
       keyboardType: TextInputType.emailAddress,
       enabled: !isLoading,
       decoration: InputDecoration(
-        labelText: 'Email',
-        hintText: 'exemple@email.com',
+        labelText: l10n.email,
+        hintText: l10n.emailExample,
         prefixIcon: const Icon(Icons.email_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -120,11 +113,9 @@ class EmailField extends StatelessWidget {
         ),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Veuillez entrer votre email';
-        }
-        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Email invalide';
+        if (value?.isEmpty ?? true) return l10n.emailRequired;
+        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+          return l10n.invalidEmail;
         }
         return null;
       },
@@ -132,12 +123,13 @@ class EmailField extends StatelessWidget {
   }
 }
 
-/// Widget pour le dropdown Niveau
+/// Dropdown Niveau d’études
 class NiveauDropdown extends StatelessWidget {
   final String? selectedNiveau;
   final List<String> niveaux;
   final bool isLoading;
   final Function(String?) onChanged;
+  final AppLocalizations l10n;
 
   const NiveauDropdown({
     super.key,
@@ -145,18 +137,17 @@ class NiveauDropdown extends StatelessWidget {
     required this.niveaux,
     required this.isLoading,
     required this.onChanged,
+    required this.l10n,
   });
 
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      initialValue: selectedNiveau,
+      value: selectedNiveau,
       decoration: InputDecoration(
-        labelText: 'Niveau d\'études',
+        labelText: l10n.educationLevel,
         prefixIcon: const Icon(Icons.school_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -166,39 +157,32 @@ class NiveauDropdown extends StatelessWidget {
           borderSide: const BorderSide(color: Color(0xFF5B9FD8), width: 2),
         ),
       ),
-      hint: const Text('Sélectionnez votre niveau'),
-      items: niveaux.map((niveau) {
-        return DropdownMenuItem<String>(
-          value: niveau,
-          child: Text(niveau),
-        );
-      }).toList(),
+      hint: Text(l10n.selectYourLevel),
+      items: niveaux.map((n) => DropdownMenuItem(value: n, child: Text(n))).toList(),
       onChanged: isLoading ? null : onChanged,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Veuillez sélectionner votre niveau';
-        }
-        return null;
-      },
+      validator: (value) =>
+      value == null ? l10n.educationLevelRequired : null,
     );
   }
 }
 
-/// Widget pour le champ Mot de passe
+/// Champ Mot de passe (avec œil)
 class PasswordField extends StatefulWidget {
   final TextEditingController controller;
   final bool isLoading;
   final String labelText;
   final String hintText;
   final String? Function(String?)? validator;
+  final AppLocalizations l10n;
 
   const PasswordField({
     super.key,
     required this.controller,
     required this.isLoading,
-    this.labelText = 'Mot de passe',
-    this.hintText = 'Min. 8 caractères',
+    this.labelText = '',
+    this.hintText = '',
     this.validator,
+    required this.l10n,
   });
 
   @override
@@ -215,20 +199,14 @@ class _PasswordFieldState extends State<PasswordField> {
       obscureText: !_isPasswordVisible,
       enabled: !widget.isLoading,
       decoration: InputDecoration(
-        labelText: widget.labelText,
-        hintText: widget.hintText,
+        labelText: widget.labelText.isNotEmpty ? widget.labelText : widget.l10n.password,
+        hintText: widget.hintText.isNotEmpty ? widget.hintText : widget.l10n.passwordHint,
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
-          icon: Icon(
-            _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-          ),
-          onPressed: () {
-            setState(() => _isPasswordVisible = !_isPasswordVisible);
-          },
+          icon: Icon(_isPasswordVisible ? Icons.visibility_off : Icons.visibility),
+          onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -240,18 +218,10 @@ class _PasswordFieldState extends State<PasswordField> {
       ),
       validator: widget.validator ??
               (value) {
-            if (value == null || value.isEmpty) {
-              return 'Veuillez entrer un mot de passe';
-            }
-            if (value.length < 8) {
-              return 'Le mot de passe doit contenir au moins 8 caractères';
-            }
-            if (!RegExp(r'[A-Z]').hasMatch(value)) {
-              return 'Le mot de passe doit contenir une majuscule';
-            }
-            if (!RegExp(r'[0-9]').hasMatch(value)) {
-              return 'Le mot de passe doit contenir un chiffre';
-            }
+            if (value?.isEmpty ?? true) return widget.l10n.passwordRequired;
+            if (value!.length < 8) return widget.l10n.passwordMin8Chars;
+            if (!RegExp(r'[A-Z]').hasMatch(value)) return widget.l10n.passwordUppercaseRequired;
+            if (!RegExp(r'[0-9]').hasMatch(value)) return widget.l10n.passwordDigitRequired;
             return null;
           },
     );

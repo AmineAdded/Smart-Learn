@@ -280,7 +280,6 @@ class _ProfilePageState extends State<ProfilePage> {
               // Section : Changer le mot de passe
               _buildPasswordSection(),
 
-              const SizedBox(height: 16),
             const SizedBox(height: 16),
 
             // NOUVELLE SECTION : Gérer mes intérêts
@@ -358,10 +357,13 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildInterestsSection() {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor, // ← même comportement que password section
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -379,23 +381,35 @@ class _ProfilePageState extends State<ProfilePage> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: const Color(0xFF00B894).withOpacity(0.1), // Vert sympa pour les intérêts
+            // Utilise une couleur du thème ou une couleur personnalisée mais avec opacité adaptée
+            color: const Color(0xFF00B894).withOpacity(0.15), // légèrement plus visible
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(
             Icons.favorite_border,
-            color: Color(0xFF00B894),
+            color: Color(0xFF00B894), // tu peux garder cette couleur vive, elle passe bien
           ),
         ),
-        title: const Text(
-          'Gérer mes intérêts',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        title: Text(
+          l10n.manageInterests,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface, // ← texte qui s'adapte au thème
+          ),
         ),
-        subtitle: const Text(
-          'Choisissez les sujets qui vous passionnent',
-          style: TextStyle(fontSize: 13),
+        subtitle: Text(
+          l10n.chooseYourTopics,
+          style: TextStyle(
+            fontSize: 13,
+            color: colorScheme.onSurface.withOpacity(0.7),
+          ),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: colorScheme.onSurface.withOpacity(0.6),
+        ),
         onTap: _openInterestsManagement,
       ),
     );

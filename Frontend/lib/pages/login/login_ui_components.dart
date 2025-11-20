@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
-/// Widget pour l'en-tête de la page de connexion (logo + titre)
+/// En-tête de connexion (logo + titre)
 class LoginHeader extends StatelessWidget {
-  const LoginHeader({Key? key}) : super(key: key);
+  final AppLocalizations l10n;
+
+  const LoginHeader({Key? key, required this.l10n}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       children: [
-        // Logo
         Container(
           width: 80,
           height: 80,
@@ -22,27 +26,21 @@ class LoginHeader extends StatelessWidget {
             color: Color(0xFF5B9FD8),
           ),
         ),
-
         const SizedBox(height: 24),
-
-        // Titre
-        const Text(
-          'Bienvenue !',
+        Text(
+          l10n.welcomeBack, // "Bienvenue !" ou "Welcome back!"
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3436),
+            color: colorScheme.onSurface,
           ),
         ),
-
         const SizedBox(height: 8),
-
-        // Sous-titre
         Text(
-          'Connectez-vous pour continuer',
+          l10n.loginToContinue, // "Connectez-vous pour continuer"
           style: TextStyle(
             fontSize: 16,
-            color: Colors.grey[600],
+            color: colorScheme.onSurface.withOpacity(0.7),
           ),
         ),
       ],
@@ -50,15 +48,17 @@ class LoginHeader extends StatelessWidget {
   }
 }
 
-/// Widget pour le lien "Mot de passe oublié"
+/// Lien "Mot de passe oublié ?"
 class ForgotPasswordLink extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onPressed;
+  final AppLocalizations l10n;
 
   const ForgotPasswordLink({
     Key? key,
     required this.isLoading,
     required this.onPressed,
+    required this.l10n,
   }) : super(key: key);
 
   @override
@@ -67,9 +67,9 @@ class ForgotPasswordLink extends StatelessWidget {
       alignment: Alignment.centerRight,
       child: TextButton(
         onPressed: isLoading ? null : onPressed,
-        child: const Text(
-          'Mot de passe oublié ?',
-          style: TextStyle(
+        child: Text(
+          l10n.forgotPassword,
+          style: const TextStyle(
             color: Color(0xFF5B9FD8),
             fontWeight: FontWeight.w500,
           ),
@@ -79,15 +79,17 @@ class ForgotPasswordLink extends StatelessWidget {
   }
 }
 
-/// Widget pour le bouton de connexion
+/// Bouton principal "Se connecter"
 class LoginButton extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onPressed;
+  final AppLocalizations l10n;
 
   const LoginButton({
     Key? key,
     required this.isLoading,
     required this.onPressed,
+    required this.l10n,
   }) : super(key: key);
 
   @override
@@ -99,76 +101,73 @@ class LoginButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF5B9FD8),
           foregroundColor: Colors.white,
-          elevation: 0,
           disabledBackgroundColor: Colors.grey[300],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: isLoading
             ? const SizedBox(
           height: 24,
           width: 24,
-          child: CircularProgressIndicator(
-            color: Colors.white,
-            strokeWidth: 2,
-          ),
+          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
         )
-            : const Text(
-          'Se connecter',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+            : Text(
+          l10n.login,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
 }
 
-/// Widget pour le séparateur "OU"
+/// Séparateur "OU"
 class LoginDivider extends StatelessWidget {
-  const LoginDivider({Key? key}) : super(key: key);
+  final AppLocalizations l10n;
+
+  const LoginDivider({Key? key, required this.l10n}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
-        Expanded(child: Divider(color: Colors.grey[300])),
+        Expanded(child: Divider(color: colorScheme.outline.withOpacity(0.3))),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'OU',
+            l10n.or,
             style: TextStyle(
-              color: Colors.grey[600],
+              color: colorScheme.onSurface.withOpacity(0.6),
               fontWeight: FontWeight.w500,
             ),
           ),
         ),
-        Expanded(child: Divider(color: Colors.grey[300])),
+        Expanded(child: Divider(color: colorScheme.outline.withOpacity(0.3))),
       ],
     );
   }
 }
 
-/// Widget pour les boutons de connexion sociale (Google, Apple)
+/// Boutons sociaux (Google, Apple)
 class SocialLoginButtons extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onGooglePressed;
-  final VoidCallback onApplePressed;
+  final AppLocalizations l10n;
 
   const SocialLoginButtons({
     Key? key,
     required this.isLoading,
     required this.onGooglePressed,
-    required this.onApplePressed,
+    required this.l10n,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       children: [
-        // Bouton Google
         SizedBox(
           height: 56,
           child: OutlinedButton.icon(
@@ -177,48 +176,19 @@ class SocialLoginButtons extends StatelessWidget {
               'assets/google_logo.png',
               height: 24,
               width: 24,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.g_mobiledata, size: 24);
-              },
+              errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24),
             ),
-            label: const Text(
-              'Continuer avec Google',
+            label: Text(
+              l10n.continueWithGoogle,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF2D3436),
+                color: colorScheme.onSurface,
               ),
             ),
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.grey[300]!),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // Bouton Apple
-        SizedBox(
-          height: 56,
-          child: OutlinedButton.icon(
-            onPressed: isLoading ? null : onApplePressed,
-            icon: const Icon(Icons.apple, size: 24, color: Colors.black),
-            label: const Text(
-              'Continuer avec Apple',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF2D3436),
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.grey[300]!),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              side: BorderSide(color: colorScheme.outline.withOpacity(0.5)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           ),
         ),
@@ -227,33 +197,34 @@ class SocialLoginButtons extends StatelessWidget {
   }
 }
 
-/// Widget pour le lien vers la page d'inscription
+/// Lien "Pas encore de compte ? S'inscrire"
 class SignUpLink extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onTap;
+  final AppLocalizations l10n;
 
   const SignUpLink({
     Key? key,
     required this.isLoading,
     required this.onTap,
+    required this.l10n,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Pas encore de compte ? ',
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 15,
-          ),
+          l10n.noAccountYet,
+          style: TextStyle(color: colorScheme.onSurface.withOpacity(0.7), fontSize: 15),
         ),
         GestureDetector(
           onTap: isLoading ? null : onTap,
           child: Text(
-            'S\'inscrire',
+            l10n.signUp,
             style: TextStyle(
               color: isLoading ? Colors.grey : const Color(0xFF5B9FD8),
               fontSize: 15,

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
-/// En-tête de la page mot de passe oublié
+/// En-tête "Mot de passe oublié"
 class ForgotPasswordHeader extends StatelessWidget {
-  const ForgotPasswordHeader({Key? key}) : super(key: key);
+  final AppLocalizations l10n;
+
+  const ForgotPasswordHeader({Key? key, required this.l10n}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       children: [
         Container(
@@ -15,28 +20,24 @@ class ForgotPasswordHeader extends StatelessWidget {
             color: const Color(0xFF5B9FD8).withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: const Icon(
-            Icons.lock_reset,
-            size: 40,
-            color: Color(0xFF5B9FD8),
-          ),
+          child: const Icon(Icons.lock_reset, size: 40, color: Color(0xFF5B9FD8)),
         ),
         const SizedBox(height: 24),
-        const Text(
-          'Mot de passe oublié ?',
+        Text(
+          l10n.forgotPasswordTitle,
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3436),
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Entrez votre adresse email et nous vous enverrons un code de vérification',
+          l10n.forgotPasswordSubtitle,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 15,
-            color: Colors.grey[600],
+            color: colorScheme.onSurface.withOpacity(0.7),
             height: 1.4,
           ),
         ),
@@ -45,15 +46,17 @@ class ForgotPasswordHeader extends StatelessWidget {
   }
 }
 
-/// Champ email
+/// Champ Email – identique au login mais traduit
 class ForgotPasswordEmailField extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
+  final AppLocalizations l10n;
 
   const ForgotPasswordEmailField({
     Key? key,
     required this.controller,
     required this.isLoading,
+    required this.l10n,
   }) : super(key: key);
 
   @override
@@ -63,12 +66,10 @@ class ForgotPasswordEmailField extends StatelessWidget {
       keyboardType: TextInputType.emailAddress,
       enabled: !isLoading,
       decoration: InputDecoration(
-        labelText: 'Email',
-        hintText: 'exemple@email.com',
+        labelText: l10n.email,
+        hintText: l10n.emailExample,
         prefixIcon: const Icon(Icons.email_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -77,13 +78,17 @@ class ForgotPasswordEmailField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF5B9FD8), width: 2),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Veuillez entrer votre email';
+          return l10n.emailRequired;
         }
         if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Email invalide';
+          return l10n.invalidEmail;
         }
         return null;
       },
@@ -91,15 +96,17 @@ class ForgotPasswordEmailField extends StatelessWidget {
   }
 }
 
-/// ✅ Nouveau bouton "Envoyer le code"
+/// Bouton "Envoyer le code"
 class SendCodeButton extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onPressed;
+  final AppLocalizations l10n;
 
   const SendCodeButton({
     Key? key,
     required this.isLoading,
     required this.onPressed,
+    required this.l10n,
   }) : super(key: key);
 
   @override
@@ -111,40 +118,34 @@ class SendCodeButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF5B9FD8),
           foregroundColor: Colors.white,
-          elevation: 0,
           disabledBackgroundColor: Colors.grey[300],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: isLoading
             ? const SizedBox(
           height: 24,
           width: 24,
-          child: CircularProgressIndicator(
-            color: Colors.white,
-            strokeWidth: 2,
-          ),
+          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
         )
-            : const Text(
-          'Envoyer le code',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+            : Text(
+          l10n.sendCode,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
 }
 
-/// Lien retour
+/// Lien "Retour à la connexion"
 class BackToLoginLink extends StatelessWidget {
   final VoidCallback onTap;
+  final AppLocalizations l10n;
 
   const BackToLoginLink({
     Key? key,
     required this.onTap,
+    required this.l10n,
   }) : super(key: key);
 
   @override
@@ -152,17 +153,13 @@ class BackToLoginLink extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(
-          Icons.arrow_back,
-          size: 18,
-          color: Color(0xFF5B9FD8),
-        ),
+        const Icon(Icons.arrow_back, size: 18, color: Color(0xFF5B9FD8)),
         const SizedBox(width: 8),
         GestureDetector(
           onTap: onTap,
-          child: const Text(
-            'Retour à la connexion',
-            style: TextStyle(
+          child: Text(
+            l10n.backToLogin,
+            style: const TextStyle(
               color: Color(0xFF5B9FD8),
               fontSize: 15,
               fontWeight: FontWeight.w600,

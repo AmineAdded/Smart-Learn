@@ -3,6 +3,7 @@ import '../services/auth_service.dart';
 import 'interests_selection_screen.dart';
 import 'signup/signup_form_fields.dart';
 import 'signup/signup_ui_components.dart';
+import '../../l10n/app_localizations.dart'; // AJOUTÉ
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -25,11 +26,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   String? _selectedNiveau;
   final List<String> _niveaux = [
-    'Collège',
-    'Lycée',
-    'Université',
-    'Formation continue',
-    'Autodidacte'
+    'Collège', 'Lycée', 'Université', 'Formation continue', 'Autodidacte'
   ];
 
   @override
@@ -43,110 +40,82 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Future<void> _handleSignUp() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (!_acceptTerms) {
-      _showSnackBar(
-        'Veuillez accepter les conditions d\'utilisation',
-        Colors.red,
-      );
+      _showSnackBar(l10n.acceptTermsRequired, Colors.red);
       return;
     }
 
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+    if (!_formKey.currentState!.validate()) return;
 
-      try {
-        print('📱 Début de l\'inscription...');
+    setState(() => _isLoading = true);
 
-        final result = await _authService.signUp(
-          nom: _nomController.text.trim(),
-          prenom: _prenomController.text.trim(),
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          niveau: _selectedNiveau!,
-        );
+    try {
+      final result = await _authService.signUp(
+        nom: _nomController.text.trim(),
+        prenom: _prenomController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        niveau: _selectedNiveau!,
+      );
 
-        print('📱 Résultat reçu: $result');
+      setState(() => _isLoading = false);
+      if (!mounted) return;
 
-        setState(() => _isLoading = false);
+      if (result['success'] == true) {
+        final prenom = result['data']?['prenom'] ?? _prenomController.text;
+        _showSnackBar(l10n.signUpSuccess(prenom), Colors.green);
 
-        if (!mounted) return;
+        await Future.delayed(const Duration(milliseconds: 600));
 
-        if (result['success'] == true) {
-          print('✅ Inscription réussie, navigation vers /home');
-
-          // Récupérer le prénom depuis les données ou utiliser celui saisi
-          final prenom = result['data']?['prenom'] ?? _prenomController.text;
-
-          _showSnackBar(
-            'Compte créé avec succès ! Bienvenue $prenom',
-            Colors.green,
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => InterestsSelectionScreen(isOnboarding: true),
+            ),
           );
-
-          // Attendre un peu pour que le message s'affiche
-          await Future.delayed(const Duration(milliseconds: 500));
-
-          // Navigation vers la page d'accueil
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => InterestsSelectionScreen(isOnboarding: true),
-              ),
-            );
-          }
-        } else {
-          print('❌ Erreur d\'inscription: ${result['message']}');
-          _showErrorDialog(result['message'] ?? 'Erreur inconnue');
         }
-      } catch (e, stackTrace) {
-        print('❌ Exception dans _handleSignUp: $e');
-        print('Stack trace: $stackTrace');
-
-        setState(() => _isLoading = false);
-        _showErrorDialog('Une erreur inattendue s\'est produite: ${e.toString()}');
+      } else {
+        _showErrorDialog(result['message'] ?? l10n.unknownError);
       }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      final l10n = AppLocalizations.of(context)!;
+      _showErrorDialog(l10n.unexpectedError);
     }
   }
 
   void _handleGoogleSignUp() {
-    _showSnackBar(
-      'Inscription Google en cours de développement',
-      Colors.blue,
-    );
+    final l10n = AppLocalizations.of(context)!;
+    _showSnackBar(l10n.googleSignUpInDevelopment, Colors.blue);
   }
 
-  void _showSnackBar(String message, Color backgroundColor) {
+  void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: backgroundColor,
+        backgroundColor: color,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
 
   void _showErrorDialog(String message) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: const Row(
-          children: [
-            Icon(Icons.error_outline, color: Colors.red, size: 28),
-            SizedBox(width: 12),
-            Text('Erreur d\'inscription'),
-          ],
-        ),
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: const Icon(Icons.error_outline, color: Colors.red, size: 28),
+        title: Text(l10n.signUpError),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(l10n.ok, style: const TextStyle(color: Color(0xFF5B9FD8))),
           ),
         ],
       ),
@@ -155,13 +124,16 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // ✅ Changé
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF2D3436)),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -175,102 +147,60 @@ class _SignUpPageState extends State<SignUpPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
-
-                  // En-tête
-                  const SignUpHeader(),
-
+                  SignUpHeader(l10n: l10n),
                   const SizedBox(height: 32),
 
-                  // Formulaire
-                  NomField(
-                    controller: _nomController,
-                    isLoading: _isLoading,
-                  ),
+                  NomField(controller: _nomController, isLoading: _isLoading, l10n: l10n),
                   const SizedBox(height: 16),
-
-                  PrenomField(
-                    controller: _prenomController,
-                    isLoading: _isLoading,
-                  ),
+                  PrenomField(controller: _prenomController, isLoading: _isLoading, l10n: l10n),
                   const SizedBox(height: 16),
-
-                  EmailField(
-                    controller: _emailController,
-                    isLoading: _isLoading,
-                  ),
+                  EmailField(controller: _emailController, isLoading: _isLoading, l10n: l10n),
                   const SizedBox(height: 16),
 
                   NiveauDropdown(
                     selectedNiveau: _selectedNiveau,
                     niveaux: _niveaux,
                     isLoading: _isLoading,
-                    onChanged: (value) {
-                      setState(() => _selectedNiveau = value);
-                    },
+                    onChanged: (value) => setState(() => _selectedNiveau = value),
+                    l10n: l10n,
                   ),
                   const SizedBox(height: 16),
 
-                  PasswordField(
-                    controller: _passwordController,
-                    isLoading: _isLoading,
-                  ),
+                  PasswordField(controller: _passwordController, isLoading: _isLoading, l10n: l10n),
                   const SizedBox(height: 16),
 
                   PasswordField(
                     controller: _confirmPasswordController,
                     isLoading: _isLoading,
-                    labelText: 'Confirmer le mot de passe',
-                    hintText: 'Répétez le mot de passe',
+                    labelText: l10n.confirmPassword,
+                    hintText: l10n.repeatPassword,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez confirmer votre mot de passe';
-                      }
-                      if (value != _passwordController.text) {
-                        return 'Les mots de passe ne correspondent pas';
-                      }
+                      if (value?.isEmpty ?? true) return l10n.confirmPasswordRequired;
+                      if (value != _passwordController.text) return l10n.passwordsDoNotMatch;
                       return null;
                     },
+                    l10n: l10n,
                   ),
 
                   const SizedBox(height: 20),
-
-                  // Conditions d'utilisation
                   TermsCheckbox(
                     acceptTerms: _acceptTerms,
                     isLoading: _isLoading,
-                    onChanged: (value) {
-                      setState(() => _acceptTerms = value);
-                    },
+                    onChanged: (v) => setState(() => _acceptTerms = v!),
+                    l10n: l10n,
                   ),
 
                   const SizedBox(height: 24),
-
-                  // Bouton d'inscription
-                  SignUpButton(
-                    isLoading: _isLoading,
-                    onPressed: _handleSignUp,
-                  ),
+                  SignUpButton(isLoading: _isLoading, onPressed: _handleSignUp, l10n: l10n),
 
                   const SizedBox(height: 24),
-
-                  // Séparateur
-                  const OrDivider(),
+                  OrDivider(l10n: l10n),
 
                   const SizedBox(height: 24),
-
-                  // Connexion avec Google
-                  GoogleSignUpButton(
-                    isLoading: _isLoading,
-                    onPressed: _handleGoogleSignUp,
-                  ),
+                  GoogleSignUpButton(isLoading: _isLoading, onPressed: _handleGoogleSignUp, l10n: l10n),
 
                   const SizedBox(height: 24),
-
-                  // Lien vers login
-                  LoginLink(
-                    isLoading: _isLoading,
-                    onTap: () => Navigator.pop(context),
-                  ),
+                  LoginLink(isLoading: _isLoading, onTap: () => Navigator.pop(context), l10n: l10n),
 
                   const SizedBox(height: 24),
                 ],

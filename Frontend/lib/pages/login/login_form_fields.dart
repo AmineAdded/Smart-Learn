@@ -1,29 +1,32 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
-/// Widget pour le champ Email de connexion
+/// Champ Email – traduit + thème-compatible
 class LoginEmailField extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
+  final AppLocalizations l10n;
 
   const LoginEmailField({
     Key? key,
     required this.controller,
     required this.isLoading,
+    required this.l10n,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return TextFormField(
       controller: controller,
       keyboardType: TextInputType.emailAddress,
       enabled: !isLoading,
       decoration: InputDecoration(
-        labelText: 'Email',
-        hintText: 'exemple@email.com',
+        labelText: l10n.email,
+        hintText: l10n.emailExample,
         prefixIcon: const Icon(Icons.email_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -39,10 +42,10 @@ class LoginEmailField extends StatelessWidget {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Veuillez entrer votre email';
+          return l10n.emailRequired;
         }
         if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Email invalide';
+          return l10n.invalidEmail;
         }
         return null;
       },
@@ -50,15 +53,17 @@ class LoginEmailField extends StatelessWidget {
   }
 }
 
-/// Widget pour le champ Mot de passe de connexion
+/// Champ Mot de passe – traduit + thème-compatible + œil pour afficher/masquer
 class LoginPasswordField extends StatefulWidget {
   final TextEditingController controller;
   final bool isLoading;
+  final AppLocalizations l10n;
 
   const LoginPasswordField({
     Key? key,
     required this.controller,
     required this.isLoading,
+    required this.l10n,
   }) : super(key: key);
 
   @override
@@ -75,7 +80,7 @@ class _LoginPasswordFieldState extends State<LoginPasswordField> {
       obscureText: !_isPasswordVisible,
       enabled: !widget.isLoading,
       decoration: InputDecoration(
-        labelText: 'Mot de passe',
+        labelText: widget.l10n.password,
         hintText: '••••••••',
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
@@ -86,9 +91,7 @@ class _LoginPasswordFieldState extends State<LoginPasswordField> {
             setState(() => _isPasswordVisible = !_isPasswordVisible);
           },
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -104,10 +107,10 @@ class _LoginPasswordFieldState extends State<LoginPasswordField> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Veuillez entrer votre mot de passe';
+          return widget.l10n.passwordRequired;
         }
         if (value.length < 6) {
-          return 'Mot de passe trop court (min. 6 caractères)';
+          return widget.l10n.passwordTooShort;
         }
         return null;
       },

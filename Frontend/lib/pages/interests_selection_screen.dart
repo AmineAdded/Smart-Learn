@@ -3,17 +3,18 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../l10n/app_localizations.dart'; // ← Important !
 
 class InterestsSelectionScreen extends StatefulWidget {
-  final bool isOnboarding; // true si appelé lors de l'inscription
+  final bool isOnboarding;
 
   const InterestsSelectionScreen({
     Key? key,
     this.isOnboarding = false
   }) : super(key: key);
 
-  @override
-  State<InterestsSelectionScreen> createState() => _InterestsSelectionScreenState();
+      @override
+      State<InterestsSelectionScreen> createState() => _InterestsSelectionScreenState();
 }
 
 class _InterestsSelectionScreenState extends State<InterestsSelectionScreen> {
@@ -31,7 +32,6 @@ class _InterestsSelectionScreenState extends State<InterestsSelectionScreen> {
     _loadCategories();
   }
 
-  // Charge les catégories disponibles depuis l'API
   Future<void> _loadCategories() async {
     setState(() {
       _isLoading = true;
@@ -58,31 +58,31 @@ class _InterestsSelectionScreenState extends State<InterestsSelectionScreen> {
               .map((cat) => CategoryInfo.fromJson(cat))
               .toList();
 
-          // Initialise les catégories déjà sélectionnées
           _selectedCategories = _categories
-              .where((cat) => cat.selected == true)
+              .where((cat) => cat.selected)
               .map((cat) => cat.name)
               .toSet();
 
           _isLoading = false;
         });
       } else {
-        throw Exception('Erreur lors du chargement des catégories, le token est : $token');
+        throw Exception('Failed to load categories');
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Impossible de charger les catégories: $e';
+        _errorMessage = e.toString();
         _isLoading = false;
       });
     }
   }
 
-  // Sauvegarde les intérêts sélectionnés
   Future<void> _saveInterests() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_selectedCategories.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez sélectionner au moins un domaine d\'intérêt'),
+        SnackBar(
+          content: Text(l10n.selectAtLeastOneInterest),
           backgroundColor: Colors.orange,
         ),
       );
@@ -101,9 +101,7 @@ class _InterestsSelectionScreenState extends State<InterestsSelectionScreen> {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: json.encode({
-          'categories': _selectedCategories.toList(),
-        }),
+        body: json.encode({'categories': _selectedCategories.toList()}),
       );
 
       if (response.statusCode == 200) {
@@ -111,93 +109,95 @@ class _InterestsSelectionScreenState extends State<InterestsSelectionScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(data['message'] ?? 'Intérêts sauvegardés avec succès'),
+            content: Text(data['message'] ?? l10n.interestsSavedSuccess),
             backgroundColor: Colors.green,
           ),
         );
 
-        // Si c'est lors de l'inscription, navigue vers l'écran principal
         if (widget.isOnboarding) {
           Navigator.pushReplacementNamed(context, '/home');
         } else {
-          Navigator.pop(context, true); // Retourne avec succès
+          Navigator.pop(context, true);
         }
       } else {
-        throw Exception('Erreur lors de la sauvegarde');
+        throw Exception('Save failed');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: Colors.red),
       );
     } finally {
       setState(() => _isSaving = false);
     }
   }
 
-  // Toggle une catégorie
-  void _toggleCategory(String categoryName) {
+  void _toggleCategory(String name) {
     setState(() {
-      if (_selectedCategories.contains(categoryName)) {
-        _selectedCategories.remove(categoryName);
-      } else {
-        _selectedCategories.add(categoryName);
-      }
+      _selectedCategories.contains(name)
+          ? _selectedCategories.remove(name)
+          : _selectedCategories.add(name);
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface, // Compatible dark/light
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: widget.isOnboarding
             ? null
             : IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          widget.isOnboarding
-              ? 'Choisissez vos intérêts'
-              : 'Modifier mes intérêts',
-          style: const TextStyle(
-            color: Colors.black87,
+          widget.isOnboarding ? l10n.chooseYourInterests : l10n.editInterests,
+          style: TextStyle(
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
         ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-          ? _buildErrorWidget()
-          : _buildContent(),
-      bottomNavigationBar: _buildBottomBar(),
+          ? _buildErrorWidget(l10n, colorScheme)
+          : _buildContent(l10n, colorScheme),
+      bottomNavigationBar: _buildBottomBar(l10n, colorScheme),
     );
   }
 
-  Widget _buildErrorWidget() {
+  Widget _buildErrorWidget(AppLocalizations l10n, ColorScheme colorScheme) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            Icon(Icons.wifi_off, size: 64, color: Colors.red.shade400),
             const SizedBox(height: 16),
+            Text(
+              l10n.connectionError,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, color: colorScheme.onSurface),
+            ),
+            const SizedBox(height: 8),
             Text(
               _errorMessage!,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
+              style: TextStyle(color: Colors.red.shade600),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: _loadCategories,
-              child: const Text('Réessayer'),
+              icon: const Icon(Icons.refresh),
+              label: Text(l10n.retry),
             ),
           ],
         ),
@@ -205,54 +205,48 @@ class _InterestsSelectionScreenState extends State<InterestsSelectionScreen> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(AppLocalizations l10n, ColorScheme colorScheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // En-tête avec instructions
         Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 widget.isOnboarding
-                    ? 'Sélectionnez les matières qui vous intéressent'
-                    : 'Mettez à jour vos domaines d\'intérêt',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                ),
+                    ? l10n.selectSubjectsYouLike
+                    : l10n.updateYourInterests,
+                style: TextStyle(fontSize: 16, color: colorScheme.onSurface.withOpacity(0.8)),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
-                '${_selectedCategories.length} sélectionné${_selectedCategories.length > 1 ? 's' : ''}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.blue,
+                l10n.selectedCount(_selectedCategories.length),
+                style: TextStyle(
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
+                  color: colorScheme.primary,
                 ),
               ),
             ],
           ),
         ),
 
-        // Grille de catégories
         Expanded(
           child: GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 1.2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
+              childAspectRatio: 1.15,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
             ),
             itemCount: _categories.length,
             itemBuilder: (context, index) {
-              final category = _categories[index];
-              final isSelected = _selectedCategories.contains(category.name);
-
-              return _buildCategoryCard(category, isSelected);
+              final cat = _categories[index];
+              final isSelected = _selectedCategories.contains(cat.name);
+              return _buildCategoryCard(cat, isSelected, colorScheme);
             },
           ),
         ),
@@ -260,91 +254,77 @@ class _InterestsSelectionScreenState extends State<InterestsSelectionScreen> {
     );
   }
 
-  Widget _buildCategoryCard(CategoryInfo category, bool isSelected) {
+  Widget _buildCategoryCard(CategoryInfo cat, bool isSelected, ColorScheme colorScheme) {
     return GestureDetector(
-      onTap: () => _toggleCategory(category.name),
+      onTap: () => _toggleCategory(cat.name),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.ease,
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue.shade50 : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected
+              ? colorScheme.primary.withOpacity(0.1)
+              : colorScheme.surface,
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
+            color: isSelected ? colorScheme.primary : colorScheme.outline.withOpacity(0.3),
+            width: isSelected ? 2.5 : 1,
           ),
-          boxShadow: isSelected
-              ? [
+          boxShadow: [
             BoxShadow(
-              color: Colors.blue.withOpacity(0.2),
-              blurRadius: 8,
+              color: Colors.black.withOpacity(isSelected ? 0.15 : 0.08),
+              blurRadius: isSelected ? 12 : 8,
               offset: const Offset(0, 4),
-            )
-          ]
-              : [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            )
+            ),
           ],
         ),
         child: Stack(
           children: [
-            // Contenu de la carte
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Icône/Emoji
+                  Text(cat.icon, style: const TextStyle(fontSize: 42)),
+                  const SizedBox(height: 12),
                   Text(
-                    category.icon,
-                    style: const TextStyle(fontSize: 40),
-                  ),
-                  const SizedBox(height: 8),
-                  // Nom de la catégorie
-                  Text(
-                    category.name,
+                    cat.name,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.blue.shade900 : Colors.black87,
+                      color: isSelected ? colorScheme.primary : colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  // Description
+                  const SizedBox(height: 6),
                   Text(
-                    category.description,
+                    cat.description,
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 11,
-                      color: isSelected ? Colors.blue.shade700 : Colors.black54,
+                      fontSize: 11.5,
+                      color: isSelected
+                          ? colorScheme.primary.withOpacity(0.9)
+                          : colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                 ],
               ),
             ),
-
-            // Icône de sélection
             if (isSelected)
               Positioned(
-                top: 8,
-                right: 8,
+                top: 10,
+                right: 10,
                 child: Container(
-                  width: 24,
-                  height: 24,
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: colorScheme.primary,
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0,2)),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 16,
-                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 18),
                 ),
               ),
           ],
@@ -353,48 +333,34 @@ class _InterestsSelectionScreenState extends State<InterestsSelectionScreen> {
     );
   }
 
-  Widget _buildBottomBar() {
+  Widget _buildBottomBar(AppLocalizations l10n, ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -4)),
         ],
       ),
       child: SafeArea(
         child: SizedBox(
-          width: double.infinity,
-          height: 50,
+          height: 56,
           child: ElevatedButton(
             onPressed: _isSaving ? null : _saveInterests,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              backgroundColor: colorScheme.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               elevation: 0,
             ),
             child: _isSaving
                 ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 2,
-              ),
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
             )
                 : Text(
-              widget.isOnboarding ? 'Commencer' : 'Sauvegarder',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
+              widget.isOnboarding ? l10n.startLearning : l10n.saveChanges,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -403,18 +369,17 @@ class _InterestsSelectionScreenState extends State<InterestsSelectionScreen> {
   }
 }
 
-// Modèle pour les catégories
 class CategoryInfo {
   final String name;
   final String icon;
   final String description;
-  final bool selected;  // ← c'est "selected", pas "isSelected" dans le JSON !!
+  final bool selected;
 
   CategoryInfo({
     required this.name,
     required this.icon,
     required this.description,
-    required this.selected,
+    this.selected = false,
   });
 
   factory CategoryInfo.fromJson(Map<String, dynamic> json) {
@@ -422,7 +387,7 @@ class CategoryInfo {
       name: json['name'] as String,
       icon: json['icon'] as String,
       description: json['description'] as String,
-      selected: json['selected'] as bool? ?? false,  // ← clé correcte
+      selected: json['selected'] as bool? ?? false,
     );
   }
 }

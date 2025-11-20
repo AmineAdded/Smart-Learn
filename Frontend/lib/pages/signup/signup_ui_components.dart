@@ -1,28 +1,33 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
-/// Widget pour l'en-tête de la page d'inscription
+/// En-tête de la page d'inscription
 class SignUpHeader extends StatelessWidget {
-  const SignUpHeader({super.key});
+  final AppLocalizations l10n;
+
+  const SignUpHeader({super.key, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Créer un compte',
+        Text(
+          l10n.createAccount,
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3436),
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Rejoignez SmartLearn et commencez votre apprentissage',
+          l10n.joinSmartLearn,
           style: TextStyle(
             fontSize: 15,
-            color: Colors.grey[600],
+            color: colorScheme.onSurface.withOpacity(0.7),
           ),
         ),
       ],
@@ -30,61 +35,48 @@ class SignUpHeader extends StatelessWidget {
   }
 }
 
-/// Widget pour la checkbox des conditions d'utilisation
+/// Checkbox + texte des conditions d'utilisation
 class TermsCheckbox extends StatelessWidget {
   final bool acceptTerms;
   final bool isLoading;
   final Function(bool) onChanged;
+  final AppLocalizations l10n;
 
   const TermsCheckbox({
     super.key,
     required this.acceptTerms,
     required this.isLoading,
     required this.onChanged,
+    required this.l10n,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
         Checkbox(
           value: acceptTerms,
-          onChanged: isLoading
-              ? null
-              : (value) {
-            onChanged(value ?? false);
-          },
+          onChanged: isLoading ? null : (v) => onChanged(v ?? false),
           activeColor: const Color(0xFF5B9FD8),
         ),
         Expanded(
           child: GestureDetector(
-            onTap: isLoading
-                ? null
-                : () {
-              onChanged(!acceptTerms);
-            },
+            onTap: isLoading ? null : () => onChanged(!acceptTerms),
             child: RichText(
               text: TextSpan(
-                style: TextStyle(
-                  color: Colors.grey[700],
-                  fontSize: 14,
-                ),
-                children: const [
-                  TextSpan(text: 'J\'accepte les '),
+                style: TextStyle(color: colorScheme.onSurface.withOpacity(0.8), fontSize: 14),
+                children: [
+                  TextSpan(text: l10n.iAcceptThe),
                   TextSpan(
-                    text: 'Conditions d\'utilisation',
-                    style: TextStyle(
-                      color: Color(0xFF5B9FD8),
-                      fontWeight: FontWeight.w600,
-                    ),
+                    text: l10n.termsOfService,
+                    style: const TextStyle(color: Color(0xFF5B9FD8), fontWeight: FontWeight.w600),
                   ),
-                  TextSpan(text: ' et la '),
+                  TextSpan(text: ' ${l10n.andThe} '),
                   TextSpan(
-                    text: 'Politique de confidentialité',
-                    style: TextStyle(
-                      color: Color(0xFF5B9FD8),
-                      fontWeight: FontWeight.w600,
-                    ),
+                    text: l10n.privacyPolicy,
+                    style: const TextStyle(color: Color(0xFF5B9FD8), fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -96,15 +88,17 @@ class TermsCheckbox extends StatelessWidget {
   }
 }
 
-/// Widget pour le bouton d'inscription
+/// Bouton principal "S'inscrire"
 class SignUpButton extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onPressed;
+  final AppLocalizations l10n;
 
   const SignUpButton({
     super.key,
     required this.isLoading,
     required this.onPressed,
+    required this.l10n,
   });
 
   @override
@@ -116,71 +110,71 @@ class SignUpButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF5B9FD8),
           foregroundColor: Colors.white,
-          elevation: 0,
           disabledBackgroundColor: Colors.grey[300],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: isLoading
             ? const SizedBox(
           height: 24,
           width: 24,
-          child: CircularProgressIndicator(
-            color: Colors.white,
-            strokeWidth: 2,
-          ),
+          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
         )
-            : const Text(
-          'S\'inscrire',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+            : Text(
+          l10n.signUp,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
 }
 
-/// Widget pour le séparateur "OU"
+/// Séparateur "OU"
 class OrDivider extends StatelessWidget {
-  const OrDivider({super.key});
+  final AppLocalizations l10n;
+
+  const OrDivider({super.key, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
-        Expanded(child: Divider(color: Colors.grey[300])),
+        Expanded(child: Divider(color: colorScheme.outline.withOpacity(0.3))),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'OU',
+            l10n.or,
             style: TextStyle(
-              color: Colors.grey[600],
+              color: colorScheme.onSurface.withOpacity(0.6),
               fontWeight: FontWeight.w500,
             ),
           ),
         ),
-        Expanded(child: Divider(color: Colors.grey[300])),
+        Expanded(child: Divider(color: colorScheme.outline.withOpacity(0.3))),
       ],
     );
   }
 }
 
-/// Widget pour le bouton de connexion avec Google
+/// Bouton Google
 class GoogleSignUpButton extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onPressed;
+  final AppLocalizations l10n;
 
   const GoogleSignUpButton({
     super.key,
     required this.isLoading,
     required this.onPressed,
+    required this.l10n,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return SizedBox(
       height: 56,
       child: OutlinedButton.icon(
@@ -189,56 +183,53 @@ class GoogleSignUpButton extends StatelessWidget {
           'assets/google_logo.png',
           height: 24,
           width: 24,
-          errorBuilder: (context, error, stackTrace) {
-            return const Icon(Icons.g_mobiledata, size: 24);
-          },
+          errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24),
         ),
-        label: const Text(
-          'S\'inscrire avec Google',
+        label: Text(
+          l10n.signUpWithGoogle,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF2D3436),
+            color: colorScheme.onSurface,
           ),
         ),
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Colors.grey[300]!),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          side: BorderSide(color: colorScheme.outline.withOpacity(0.5)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );
   }
 }
 
-/// Widget pour le lien vers la page de connexion
+/// Lien "Vous avez déjà un compte ? Se connecter"
 class LoginLink extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onTap;
+  final AppLocalizations l10n;
 
   const LoginLink({
     super.key,
     required this.isLoading,
     required this.onTap,
+    required this.l10n,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Vous avez déjà un compte ? ',
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 15,
-          ),
+          l10n.alreadyHaveAccount,
+          style: TextStyle(color: colorScheme.onSurface.withOpacity(0.7), fontSize: 15),
         ),
         GestureDetector(
           onTap: isLoading ? null : onTap,
           child: Text(
-            'Se connecter',
+            l10n.login,
             style: TextStyle(
               color: isLoading ? Colors.grey : const Color(0xFF5B9FD8),
               fontSize: 15,

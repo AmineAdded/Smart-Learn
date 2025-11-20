@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../services/password_reset_service.dart';
 import 'forgot_password/forgot_password_widgets.dart';
 import 'VerifyCodePage.dart'; // ✅ Nouvelle page
@@ -78,6 +79,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -98,12 +100,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 40),
-                  const ForgotPasswordHeader(),
+                  ForgotPasswordHeader(l10n: l10n),
                   const SizedBox(height: 48),
 
                   ForgotPasswordEmailField(
                     controller: _emailController,
                     isLoading: _isLoading,
+                    l10n: l10n,
                   ),
 
                   const SizedBox(height: 32),
@@ -111,12 +114,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   SendCodeButton( // ✅ Nouveau bouton
                     isLoading: _isLoading,
                     onPressed: _handleSendCode,
+                    l10n: l10n,
                   ),
 
                   const SizedBox(height: 24),
 
                   BackToLoginLink(
                     onTap: () => Navigator.pop(context),
+                    l10n: l10n,
                   ),
 
                   const SizedBox(height: 24),

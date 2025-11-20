@@ -75,7 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   // âœ… CORRECTION : Conversion camelCase â†’ snake_case pour le backend
   Future<void> _updateSetting(Map<String, dynamic> update) async {
-    // Convertir les clÃ©s en snake_case
+    // Convertir les clé en snake_case
     final Map<String, dynamic> backendUpdate = {};
 
     update.forEach((key, value) {
@@ -148,7 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
       final timeString =
           '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}';
 
-      // âœ… Envoyer avec le bon nom de clÃ©
+      // âœ… Envoyer avec le bon nom de clé
       _updateSetting({'${timeType}Time': timeString});
     }
   }
@@ -206,7 +206,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ElevatedButton.icon(
                 onPressed: _loadSettings,
                 icon: const Icon(Icons.refresh),
-                label: const Text('RÃ©essayer'),
+                label: const Text('Réessayer'),
               ),
             ],
           ),
@@ -235,27 +235,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Section Compte
-            _buildSectionHeader(
-              icon: Icons.person_outline,
-              title: l10n.account,
-              color: const Color(0xFF5B9FD8),
-            ),
-            const SizedBox(height: 12),
-            _buildSettingsCard([
-              _buildListTile(
-                icon: Icons.edit_outlined,
-                title: 'Informations personnelles',
-                subtitle: 'Modifier votre profil',
-                onTap: () {
-                  Navigator.pushNamed(context, '/profile');
-                },
-              ),
-            ]),
-
-            const SizedBox(height: 24),
-
-            // Section ConfidentialitÃ©
+            // Section Confidentialité
             _buildSectionHeader(
               icon: Icons.shield_outlined,
               title: l10n.privacy,
@@ -384,14 +364,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const SizedBox(height: 16),
 
-            // FrÃ©quence des rappels
+            // Fréquence des rappels
             _buildSettingsCard([
               _buildFrequencyTile(),
             ]),
 
             const SizedBox(height: 24),
 
-            // Section PrÃ©fÃ©rences
+            // Section Préférences
             _buildSectionHeader(
               icon: Icons.settings_outlined,
               title: l10n.preferences,
@@ -416,7 +396,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const SizedBox(height: 24),
 
-            // Section Ã€ propos
+            // Section à propos
             _buildSectionHeader(
               icon: Icons.info_outline,
               title: l10n.about,
@@ -436,7 +416,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const SizedBox(height: 24),
 
-            // Bouton dÃ©connexion
+            // Bouton déconnexion
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 8),
               child: ElevatedButton.icon(
@@ -689,7 +669,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final languageNames = {
       'fr': l10n.languageFr,
       'en': l10n.languageEn,
-      'ar': l10n.languageAr,
     };
 
     return ListTile(
@@ -710,7 +689,7 @@ class _SettingsPageState extends State<SettingsPage> {
         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
       ),
       subtitle: Text(
-        languageNames[_settings!.language] ?? 'FranÃ§ais',
+        languageNames[_settings!.language] ?? 'Français',
         style: TextStyle(fontSize: 13, color: Colors.grey[600]),
       ),
       onTap: () {
@@ -744,16 +723,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     Navigator.pop(context);
                   },
                 ),
-                RadioListTile<String>(
-                  title: Text(l10n.languageAr),
-                  value: 'ar',
-                  groupValue: _settings!.language,
-                  onChanged: (value) {
-                    _updateSetting({'language': value});
-                    localeProvider.setLocale(value!);
-                    Navigator.pop(context);
-                  },
-                ),
               ],
             ),
           ),
@@ -761,54 +730,80 @@ class _SettingsPageState extends State<SettingsPage> {
       },
     );
   }
-
   Widget _buildFrequencyTile() {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ListTile(
       leading: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.1), // ✅ Changé
-          borderRadius: BorderRadius.circular(10),
+          color: colorScheme.primary.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: const Icon(
-          Icons.repeat_outlined,
-          color: Color(0xFFFDB33F),
-          size: 22,
+          Icons.notifications_active_outlined,
+          color: Color(0xFFFDB33F), // Orange vif – parfait pour les rappels
+          size: 24,
         ),
       ),
-      title: const Text(
-        'FrÃ©quence des rappels',
-        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+      title: Text(
+        l10n.reminderFrequencyTitle,
+        style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        '${_settings!.reminderFrequency} fois par jour',
-        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+        l10n.reminderFrequencySubtitle(_settings!.reminderFrequency),
+        style: TextStyle(
+          fontSize: 13.5,
+          color: colorScheme.onSurface.withOpacity(0.7),
+        ),
       ),
-      onTap: () {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: const Text('FrÃ©quence'),
-            content: Column(
+      trailing: Icon(Icons.chevron_right, color: colorScheme.onSurface.withOpacity(0.5)),
+      onTap: () => _showFrequencyDialog(l10n, colorScheme),
+    );
+  }
+
+  void _showFrequencyDialog(AppLocalizations l10n, ColorScheme colorScheme) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+          backgroundColor: colorScheme.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          icon: Icon(Icons.repeat_rounded, size: 32, color: colorScheme.primary),
+          title: Text(
+            l10n.reminderFrequencyTitle,
+            style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+          ),
+          content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [1, 2, 3].map((freq) {
-                return RadioListTile<int>(
-                  title: Text('$freq fois par jour'),
-                  value: freq,
-                  groupValue: _settings!.reminderFrequency,
-                  onChanged: (value) {
-                    _updateSetting({'reminderFrequency': value});
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-        );
+      return RadioListTile<int>(
+      activeColor: colorScheme.primary,
+      title: Text(
+      l10n.timesPerDay(freq),
+      style: const TextStyle(fontSize: 16),
+      ),
+      subtitle: freq == 1
+      ? Text(l10n.onceADay, style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6)))
+          : null,
+      value: freq,
+      groupValue: _settings!.reminderFrequency,
+      onChanged: (value) {
+      if (value != null) {
+      _updateSetting({'reminderFrequency': value});
+      Navigator.pop(context);
+      }
       },
+      );
+      }).toList(),
+    ),
+    actions: [
+    TextButton(
+    onPressed: () => Navigator.pop(context),
+    child: Text(l10n.cancel, style: TextStyle(color: colorScheme.primary)),
+    ),
+    ],
+    ),
     );
   }
 }
