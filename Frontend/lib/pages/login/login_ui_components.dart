@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Widget pour l'en-tête de la page de connexion (logo + titre)
 class LoginHeader extends StatelessWidget {
-  const LoginHeader({super.key});
+  const LoginHeader({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -56,10 +56,10 @@ class ForgotPasswordLink extends StatelessWidget {
   final VoidCallback onPressed;
 
   const ForgotPasswordLink({
-    super.key,
+    Key? key,
     required this.isLoading,
     required this.onPressed,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -85,10 +85,10 @@ class LoginButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   const LoginButton({
-    super.key,
+    Key? key,
     required this.isLoading,
     required this.onPressed,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +128,7 @@ class LoginButton extends StatelessWidget {
 
 /// Widget pour le séparateur "OU"
 class LoginDivider extends StatelessWidget {
-  const LoginDivider({super.key});
+  const LoginDivider({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -158,11 +158,11 @@ class SocialLoginButtons extends StatelessWidget {
   final VoidCallback onApplePressed;
 
   const SocialLoginButtons({
-    super.key,
+    Key? key,
     required this.isLoading,
     required this.onGooglePressed,
     required this.onApplePressed,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -233,10 +233,10 @@ class SignUpLink extends StatelessWidget {
   final VoidCallback onTap;
 
   const SignUpLink({
-    super.key,
+    Key? key,
     required this.isLoading,
     required this.onTap,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
