@@ -6,10 +6,10 @@ class LoginEmailField extends StatelessWidget {
   final bool isLoading;
 
   const LoginEmailField({
-    super.key,
+    Key? key,
     required this.controller,
     required this.isLoading,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -56,10 +56,10 @@ class LoginPasswordField extends StatefulWidget {
   final bool isLoading;
 
   const LoginPasswordField({
-    super.key,
+    Key? key,
     required this.controller,
     required this.isLoading,
-  });
+  }) : super(key: key);
 
   @override
   State<LoginPasswordField> createState() => _LoginPasswordFieldState();
