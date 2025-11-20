@@ -60,7 +60,7 @@ class _InterestsSelectionScreenState extends State<InterestsSelectionScreen> {
 
           // Initialise les catégories déjà sélectionnées
           _selectedCategories = _categories
-              .where((cat) => cat.selected == true)  // ← "selected", pas "isSelected"
+              .where((cat) => cat.selected == true)
               .map((cat) => cat.name)
               .toSet();
 
