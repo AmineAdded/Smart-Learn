@@ -43,6 +43,10 @@ class _SettingsPageState extends State<SettingsPage> {
         _isLoading = false;
         _parseTimeSettings();
       });
+
+      // Synchroniser la langue locale avec celle du backend
+      final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+      await localeProvider.syncWithBackend(_settings!.language);
     } else {
       setState(() => _isLoading = false);
       _showErrorSnackBar(result['message']);
@@ -663,6 +667,7 @@ class _SettingsPageState extends State<SettingsPage> {
       },
     );
   }
+
   Widget _buildLanguageTile(BuildContext context, AppLocalizations l10n) {
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
 
@@ -675,30 +680,21 @@ class _SettingsPageState extends State<SettingsPage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.1), // ✅ Changé
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(
-          Icons.language_outlined,
-          color: Color(0xFF5B9FD8),
-          size: 22,
-        ),
+        child: const Icon(Icons.language_outlined, color: Color(0xFF5B9FD8), size: 22),
       ),
-      title: Text(
-        l10n.language,
-        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-      ),
+      title: Text(l10n.language, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
       subtitle: Text(
-        languageNames[_settings!.language] ?? 'Français',
+        languageNames[_settings!.language] ?? l10n.languageFr,
         style: TextStyle(fontSize: 13, color: Colors.grey[600]),
       ),
       onTap: () {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+          builder: (_) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Text(l10n.language),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -730,6 +726,7 @@ class _SettingsPageState extends State<SettingsPage> {
       },
     );
   }
+
   Widget _buildFrequencyTile() {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;

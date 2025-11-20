@@ -14,22 +14,22 @@ import 'pages/HomePage.dart';
 import 'pages/ProfilePage.dart';
 import 'pages/ForgotPasswordPage.dart';
 import 'pages/ResetPasswordPage.dart';
-
 import 'pages/SettingsPage.dart';
 import 'pages/ProgressionPage.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Charger le fichier .env
   await dotenv.load(fileName: ".env");
-  runApp(const MyApp());
+
+  // Initialisation du provider AVANT runApp
+  final localeProvider = LocaleProvider();
+  await localeProvider.initLocale(); // Charge la langue sauvegardée
 
   runApp(
-    /// MultiProvider pour gérer thème ET langue
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvide()),
-        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ChangeNotifierProvider.value(value: localeProvider),
       ],
       child: const MyApp(),
     ),
@@ -41,21 +41,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Récupérer les providers
-    final themeProvider = Provider.of<ThemeProvide>(context);
     final localeProvider = Provider.of<LocaleProvider>(context);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'SmartLearn',
 
-      // ✅ THÈME DYNAMIQUE
       theme: ThemeProvide.lightTheme,
       darkTheme: ThemeProvide.darkTheme,
-      themeMode: themeProvider.themeMode,
+      themeMode: Provider.of<ThemeProvide>(context).themeMode,
 
-      // Routes nommées
-      // ✅ LOCALISATION
       locale: localeProvider.locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -65,27 +60,25 @@ class MyApp extends StatelessWidget {
       ],
       supportedLocales: LocaleProvider.supportedLocales,
 
-      // Routes
       routes: {
-        '/': (context) => const SmartLearnSplashScreen(),
-        '/onboarding': (context) => const OnboardingPage(),
-        '/login': (context) => const LoginPage(),
-        '/signup': (context) => const SignUpPage(),
-        '/home': (context) => const HomePage(),
-        '/profile': (context) => const ProfilePage(),
-        '/forgot-password': (context) => const ForgotPasswordPage(),
-        '/progression': (context) => const ProgressionPage(),
-        '/settings': (context) => const SettingsPage(),
-        '/interests-selection': (context) => const InterestsSelectionScreen()
+        '/': (_) => const SmartLearnSplashScreen(),
+        '/onboarding': (_) => const OnboardingPage(),
+        '/login': (_) => const LoginPage(),
+        '/signup': (_) => const SignUpPage(),
+        '/home': (_) => const HomePage(),
+        '/profile': (_) => const ProfilePage(),
+        '/forgot-password': (_) => const ForgotPasswordPage(),
+        '/progression': (_) => const ProgressionPage(),
+        '/settings': (_) => const SettingsPage(),
+        '/interests-selection': (_) => const InterestsSelectionScreen(isOnboarding: false),
       },
 
-      // Route avec paramètre pour la réinitialisation
       onGenerateRoute: (settings) {
         if (settings.name == '/reset-password') {
           final token = settings.arguments as String?;
           if (token != null) {
             return MaterialPageRoute(
-              builder: (context) => ResetPasswordPage(token: token),
+              builder: (_) => ResetPasswordPage(token: token),
             );
           }
         }

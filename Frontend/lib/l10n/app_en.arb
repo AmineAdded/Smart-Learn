@@ -276,5 +276,14 @@
 "passwordRequired": "Please enter a password",
 "passwordMin8Chars": "Password must be at least 8 characters",
 "passwordUppercaseRequired": "Password must contain an uppercase letter",
-"passwordDigitRequired": "Password must contain a digit"
+"passwordDigitRequired": "Password must contain a digit",
+"onboardingQuizTitle": "Interactive Quizzes",
+"onboardingQuizDesc": "Test your knowledge with personalized quizzes adapted to your level",
+"onboardingAiTitle": "Personalized AI",
+"onboardingAiDesc": "An artificial intelligence that adapts to your learning pace",
+"onboardingProgressTitle": "Progress Tracking",
+"onboardingProgressDesc": "Track your progress and achieve your learning goals",
+"next": "Next",
+"getStarted": "Get Started",
+"skip": "Skip"
 }

@@ -1372,6 +1372,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Min. 8 characters'**
   String get passwordHint;
+
+  /// No description provided for @onboardingQuizTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interactive Quizzes'**
+  String get onboardingQuizTitle;
+
+  /// No description provided for @onboardingQuizDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Test your knowledge with personalized quizzes adapted to your level'**
+  String get onboardingQuizDesc;
+
+  /// No description provided for @onboardingAiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personalized AI'**
+  String get onboardingAiTitle;
+
+  /// No description provided for @onboardingAiDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'An artificial intelligence that adapts to your learning pace'**
+  String get onboardingAiDesc;
+
+  /// No description provided for @onboardingProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress Tracking'**
+  String get onboardingProgressTitle;
+
+  /// No description provided for @onboardingProgressDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your progress and achieve your learning goals'**
+  String get onboardingProgressDesc;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get getStarted;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

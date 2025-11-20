@@ -681,4 +681,31 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get passwordHint => 'Min. 8 caractères';
+
+  @override
+  String get onboardingQuizTitle => 'Quiz Interactifs';
+
+  @override
+  String get onboardingQuizDesc => 'Testez vos connaissances avec des quiz personnalisés adaptés à votre niveau';
+
+  @override
+  String get onboardingAiTitle => 'IA Personnalisée';
+
+  @override
+  String get onboardingAiDesc => 'Une intelligence artificielle qui s\'adapte à votre rythme d\'apprentissage';
+
+  @override
+  String get onboardingProgressTitle => 'Suivi de Progression';
+
+  @override
+  String get onboardingProgressDesc => 'Suivez vos progrès et atteignez vos objectifs d\'apprentissage';
+
+  @override
+  String get next => 'Suivant';
+
+  @override
+  String get getStarted => 'Commencer';
+
+  @override
+  String get skip => 'Passer';
 }

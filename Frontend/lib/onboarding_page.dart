@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -11,26 +12,30 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<OnboardingItem> _onboardingItems = [
-    OnboardingItem(
-      icon: Icons.menu_book_rounded,
-      title: 'Quiz Interactifs',
-      description:
-      'Testez vos connaissances avec des quiz personnalisés adaptés à votre niveau',
-    ),
-    OnboardingItem(
-      icon: Icons.psychology_rounded,
-      title: 'IA Personnalisée',
-      description:
-      'Une intelligence artificielle qui s\'adapte à votre rythme d\'apprentissage',
-    ),
-    OnboardingItem(
-      icon: Icons.trending_up_rounded,
-      title: 'Suivi de Progression',
-      description:
-      'Suivez vos progrès et atteignez vos objectifs d\'apprentissage',
-    ),
-  ];
+  late final List<OnboardingItem> _items;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context)!;
+    _items = [
+      OnboardingItem(
+        icon: Icons.menu_book_rounded,
+        title: l10n.onboardingQuizTitle,
+        description: l10n.onboardingQuizDesc,
+      ),
+      OnboardingItem(
+        icon: Icons.psychology_rounded,
+        title: l10n.onboardingAiTitle,
+        description: l10n.onboardingAiDesc,
+      ),
+      OnboardingItem(
+        icon: Icons.trending_up_rounded,
+        title: l10n.onboardingProgressTitle,
+        description: l10n.onboardingProgressDesc,
+      ),
+    ];
+  }
 
   @override
   void dispose() {
@@ -38,36 +43,29 @@ class _OnboardingPageState extends State<OnboardingPage> {
     super.dispose();
   }
 
-  void _onPageChanged(int page) {
-    setState(() {
-      _currentPage = page;
-    });
-  }
+  void _onPageChanged(int page) => setState(() => _currentPage = page);
 
   void _nextPage() {
-    if (_currentPage < _onboardingItems.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+    if (_currentPage < _items.length - 1) {
+      _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
     } else {
       _finishOnboarding();
     }
   }
 
-  void _skipOnboarding() {
-    _finishOnboarding();
-  }
+  void _skipOnboarding() => _finishOnboarding();
 
   void _finishOnboarding() {
-    // Naviguer vers la page de connexion
     Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -75,13 +73,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: PageView.builder(
                 controller: _pageController,
                 onPageChanged: _onPageChanged,
-                itemCount: _onboardingItems.length,
-                itemBuilder: (context, index) {
-                  return _buildOnboardingPage(_onboardingItems[index]);
-                },
+                itemCount: _items.length,
+                itemBuilder: (_, index) => _buildOnboardingPage(_items[index]),
               ),
             ),
-            _buildBottomSection(),
+            _buildBottomSection(l10n),
           ],
         ),
       ),
@@ -89,6 +85,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Widget _buildOnboardingPage(OnboardingItem item) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40.0),
       child: Column(
@@ -96,7 +94,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         children: [
           const Spacer(flex: 2),
 
-          // Icône avec cercle de fond
+          // Icône avec cercle bleu clair
           Container(
             width: 120,
             height: 120,
@@ -104,11 +102,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               color: const Color(0xFF5B9FD8).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              item.icon,
-              size: 60,
-              color: const Color(0xFF5B9FD8),
-            ),
+            child: Icon(item.icon, size: 60, color: const Color(0xFF5B9FD8)),
           ),
 
           const SizedBox(height: 48),
@@ -117,10 +111,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
           Text(
             item.title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF2D3436),
+              color: colorScheme.onSurface,
               height: 1.3,
             ),
           ),
@@ -133,8 +127,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Colors.grey[600],
+              color: colorScheme.onSurface.withOpacity(0.7),
               height: 1.5,
             ),
           ),
@@ -145,23 +138,23 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  Widget _buildBottomSection() {
+  Widget _buildBottomSection(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         children: [
-          // Indicateur de pages
+          // Indicateurs de page
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(
-              _onboardingItems.length,
-                  (index) => _buildPageIndicator(index),
+              _items.length,
+                  (i) => _buildPageIndicator(i == _currentPage),
             ),
           ),
 
           const SizedBox(height: 32),
 
-          // Bouton Suivant
+          // Bouton principal
           SizedBox(
             width: double.infinity,
             height: 56,
@@ -171,21 +164,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 backgroundColor: const Color(0xFF5B9FD8),
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    _currentPage == _onboardingItems.length - 1
-                        ? 'Commencer'
-                        : 'Suivant',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    _currentPage == _items.length - 1 ? l10n.getStarted : l10n.next,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(width: 8),
                   const Icon(Icons.arrow_forward, size: 20),
@@ -200,11 +186,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
           TextButton(
             onPressed: _skipOnboarding,
             child: Text(
-              'Passer',
+              l10n.skip,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
           ),
@@ -213,15 +199,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  Widget _buildPageIndicator(int index) {
-    bool isActive = index == _currentPage;
+  Widget _buildPageIndicator(bool isActive) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 4),
       width: isActive ? 24 : 8,
       height: 8,
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF5B9FD8) : Colors.grey[300],
+        color: isActive ? const Color(0xFF5B9FD8) : Theme.of(context).colorScheme.outline.withOpacity(0.3),
         borderRadius: BorderRadius.circular(4),
       ),
     );
@@ -233,7 +218,7 @@ class OnboardingItem {
   final String title;
   final String description;
 
-  OnboardingItem({
+  const OnboardingItem({
     required this.icon,
     required this.title,
     required this.description,

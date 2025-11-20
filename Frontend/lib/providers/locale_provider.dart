@@ -2,84 +2,70 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/settings_service.dart';
 
-/// Provider pour gérer la langue de l'application
 class LocaleProvider with ChangeNotifier {
   Locale _locale = const Locale('fr');
-  final _settingsService = SettingsService();
+  final SettingsService _settingsService = SettingsService();
 
   Locale get locale => _locale;
 
   LocaleProvider() {
-    _loadLocale();
+    initLocale();
   }
 
-  /// Charger la langue depuis les préférences locales
-  Future<void> _loadLocale() async {
+  /// Chargement au démarrage : priorité locale → backend
+  Future<void> initLocale() async {
     final prefs = await SharedPreferences.getInstance();
-    final languageCode = prefs.getString('language') ?? 'fr';
+    final savedLang = prefs.getString('app_language');
 
+    if (savedLang != null && savedLang.isNotEmpty) {
+      _locale = Locale(savedLang);
+      notifyListeners();
+    }
+    // On ne charge pas encore le backend ici → fait dans SettingsPage après login
+  }
+
+  /// Changer la langue (utilisé dans les paramètres)
+  Future<void> setLocale(String languageCode) async {
+    if (_locale.languageCode == languageCode) return;
+
+    print('Langue → $languageCode');
+
+    // 1. Mise à jour immédiate de l'UI
     _locale = Locale(languageCode);
     notifyListeners();
-  }
 
-  /// Changer la langue ET synchroniser avec le backend
-  Future<void> setLocale(String languageCode) async {
+    // 2. Sauvegarde locale instantanée (même hors ligne)
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('app_language', languageCode);
+
+    // 3. Synchronisation backend (si connecté)
     try {
-      print('🔵 Changement de langue: $languageCode');
-
-      // 1️⃣ Mettre à jour localement (SharedPreferences)
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('language', languageCode);
-
-      // 2️⃣ Mettre à jour l'état local
-      _locale = Locale(languageCode);
-      notifyListeners();
-
-      // 3️⃣ Synchroniser avec le backend
-      final result = await _settingsService.updateSettings({
-        'language': languageCode,
-      });
-
-      if (result['success']) {
-        print('✅ Langue changée et synchronisée: $languageCode');
-      } else {
-        print('⚠️ Langue changée localement, mais erreur backend: ${result['message']}');
+      final result = await _settingsService.updateSettings({'language': languageCode});
+      if (!result['success']) {
+        print('Backend non synchronisé: ${result['message']}');
+        // On garde quand même la langue localement → l'utilisateur la verra
       }
     } catch (e) {
-      print('❌ Erreur changement langue: $e');
-      // En cas d'erreur, la langue reste changée localement
+      print('Erreur synchronisation backend langue: $e');
     }
   }
 
-  /// Charger la langue depuis le backend (au démarrage)
-  Future<void> loadFromBackend() async {
-    try {
-      final result = await _settingsService.getSettings();
+  /// Appelée après login pour synchroniser avec le backend
+  Future<void> syncWithBackend(String backendLanguage) async {
+    if (backendLanguage == _locale.languageCode) return;
 
-      if (result['success']) {
-        final settings = result['settings'];
-        final backendLanguage = settings.language;
+    print('Synchronisation locale avec backend: $backendLanguage');
 
-        if (backendLanguage != _locale.languageCode) {
-          print('🔄 Synchronisation langue depuis backend: $backendLanguage');
+    _locale = Locale(backendLanguage);
+    notifyListeners();
 
-          // Mettre à jour localement
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('language', backendLanguage);
-
-          _locale = Locale(backendLanguage);
-          notifyListeners();
-        }
-      }
-    } catch (e) {
-      print('⚠️ Impossible de charger la langue depuis le backend: $e');
-    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('app_language', backendLanguage);
   }
 
   /// Langues supportées
   static const List<Locale> supportedLocales = [
-    Locale('fr'), // Français
-    Locale('en'), // English
-    Locale('ar'), // العربية
+    Locale('fr'),
+    Locale('en'),
   ];
 }

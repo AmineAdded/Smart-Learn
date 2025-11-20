@@ -274,5 +274,14 @@
 "passwordRequired": "Veuillez entrer un mot de passe",
 "passwordMin8Chars": "Le mot de passe doit contenir au moins 8 caractères",
 "passwordUppercaseRequired": "Le mot de passe doit contenir une majuscule",
-"passwordDigitRequired": "Le mot de passe doit contenir un chiffre"
+"passwordDigitRequired": "Le mot de passe doit contenir un chiffre",
+"onboardingQuizTitle": "Quiz Interactifs",
+"onboardingQuizDesc": "Testez vos connaissances avec des quiz personnalisés adaptés à votre niveau",
+"onboardingAiTitle": "IA Personnalisée",
+"onboardingAiDesc": "Une intelligence artificielle qui s'adapte à votre rythme d'apprentissage",
+"onboardingProgressTitle": "Suivi de Progression",
+"onboardingProgressDesc": "Suivez vos progrès et atteignez vos objectifs d'apprentissage",
+"next": "Suivant",
+"getStarted": "Commencer",
+"skip": "Passer"
 }
