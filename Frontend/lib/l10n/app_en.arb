@@ -285,5 +285,14 @@
 "onboardingProgressDesc": "Track your progress and achieve your learning goals",
 "next": "Next",
 "getStarted": "Get Started",
-"skip": "Skip"
+"skip": "Skip",
+"hello": "Hello,",
+"currentLevel": "Current Level",
+"progressToExpert": "% towards Expert",
+"seeAll": "See All",
+"ai": "AI",
+"question": "question",
+"questions": "questions",
+"newLabel": "New",
+"progressToExpert": "% towards Expert"
 }

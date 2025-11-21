@@ -110,7 +110,7 @@ abstract class AppLocalizations {
   /// No description provided for @hello.
   ///
   /// In en, this message translates to:
-  /// **'Hello'**
+  /// **'Hello,'**
   String get hello;
 
   /// No description provided for @settings.
@@ -1426,6 +1426,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip'**
   String get skip;
+
+  /// No description provided for @progressToExpert.
+  ///
+  /// In en, this message translates to:
+  /// **'% towards Expert'**
+  String get progressToExpert;
+
+  /// No description provided for @ai.
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get ai;
+
+  /// No description provided for @question.
+  ///
+  /// In en, this message translates to:
+  /// **'question'**
+  String get question;
+
+  /// No description provided for @newLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get newLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

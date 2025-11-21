@@ -47,6 +47,11 @@ class _SettingsPageState extends State<SettingsPage> {
       // Synchroniser la langue locale avec celle du backend
       final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
       await localeProvider.syncWithBackend(_settings!.language);
+
+      //Synchroniser le thème avec celui du backend
+      final themeProvider = Provider.of<ThemeProvide>(context, listen: false);
+      await themeProvider.syncWithBackend(_settings!.theme);
+
     } else {
       setState(() => _isLoading = false);
       _showErrorSnackBar(result['message']);
@@ -559,7 +564,13 @@ class _SettingsPageState extends State<SettingsPage> {
   // Remplacez la méthode _buildThemeTile dans SettingsPage.dart
 
   Widget _buildThemeTile(BuildContext context, AppLocalizations l10n) {
-    final themeProvider = Provider.of<ThemeProvide>(context);
+    final themeProvider = Provider.of<ThemeProvide>(context, listen: false);
+
+    final currentTheme = themeProvider.themeMode == ThemeMode.light
+        ? 'light'
+        : themeProvider.themeMode == ThemeMode.dark
+        ? 'dark'
+        : 'system';
 
     final themeNames = {
       'light': l10n.themeLight,
@@ -571,30 +582,21 @@ class _SettingsPageState extends State<SettingsPage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.1), // ✅ Changé
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(
-          Icons.brightness_6_outlined,
-          color: Color(0xFF5B9FD8),
-          size: 22,
-        ),
+        child: const Icon(Icons.brightness_6_outlined, color: Color(0xFF5B9FD8), size: 22),
       ),
-      title: Text(
-        l10n.theme,
-        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-      ),
+      title: Text(l10n.theme, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
       subtitle: Text(
-        themeNames[_settings!.theme] ?? 'Système',
+        themeNames[currentTheme] ?? l10n.themeSystem,
         style: TextStyle(fontSize: 13, color: Colors.grey[600]),
       ),
       onTap: () {
         showDialog(
           context: context,
-          builder: (dialogContext) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+          builder: (_) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Text(l10n.theme),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -602,62 +604,31 @@ class _SettingsPageState extends State<SettingsPage> {
                 RadioListTile<String>(
                   title: Text(l10n.themeLight),
                   value: 'light',
-                  groupValue: themeProvider.themeMode == ThemeMode.light
-                      ? 'light'
-                      : themeProvider.themeMode == ThemeMode.dark
-                      ? 'dark'
-                      : 'system',
-                  onChanged: (value) async {
-                    if (value == null) return;
-
-                    // ✅ Mettre à jour le thème via le provider
-                    await themeProvider.setTheme(value);
-
-                    // ✅ Mettre à jour le backend
-                    await _updateSetting({'theme': value});
-
-                    // ✅ Fermer le dialog après la mise à jour
-                    if (mounted) {
-                      Navigator.of(dialogContext).pop();
-                    }
+                  groupValue: currentTheme,
+                  onChanged: (value) {
+                    themeProvider.setTheme(value!);
+                    _updateSetting({'theme': value});
+                    Navigator.pop(context);
                   },
                 ),
                 RadioListTile<String>(
                   title: Text(l10n.themeDark),
                   value: 'dark',
-                  groupValue: themeProvider.themeMode == ThemeMode.light
-                      ? 'light'
-                      : themeProvider.themeMode == ThemeMode.dark
-                      ? 'dark'
-                      : 'system',
-                  onChanged: (value) async {
-                    if (value == null) return;
-
-                    await themeProvider.setTheme(value);
-                    await _updateSetting({'theme': value});
-
-                    if (mounted) {
-                      Navigator.of(dialogContext).pop();
-                    }
+                  groupValue: currentTheme,
+                  onChanged: (value) {
+                    themeProvider.setTheme(value!);
+                    _updateSetting({'theme': value});
+                    Navigator.pop(context);
                   },
                 ),
                 RadioListTile<String>(
                   title: Text(l10n.themeSystem),
                   value: 'system',
-                  groupValue: themeProvider.themeMode == ThemeMode.light
-                      ? 'light'
-                      : themeProvider.themeMode == ThemeMode.dark
-                      ? 'dark'
-                      : 'system',
-                  onChanged: (value) async {
-                    if (value == null) return;
-
-                    await themeProvider.setTheme(value);
-                    await _updateSetting({'theme': value});
-
-                    if (mounted) {
-                      Navigator.of(dialogContext).pop();
-                    }
+                  groupValue: currentTheme,
+                  onChanged: (value) {
+                    themeProvider.setTheme(value!);
+                    _updateSetting({'theme': value});
+                    Navigator.pop(context);
                   },
                 ),
               ],

@@ -15,7 +15,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get welcome => 'Bienvenue';
 
   @override
-  String get hello => 'Bonjour';
+  String get hello => 'Bonjour,';
 
   @override
   String get settings => 'Paramètres';
@@ -708,4 +708,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get skip => 'Passer';
+
+  @override
+  String get progressToExpert => '% vers Expert';
+
+  @override
+  String get ai => 'IA';
+
+  @override
+  String get question => 'question';
+
+  @override
+  String get newLabel => 'Nouveau';
 }

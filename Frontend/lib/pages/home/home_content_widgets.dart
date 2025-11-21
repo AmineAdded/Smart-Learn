@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
-/// Widget pour l'en-tête avec salutation et niveau
+/// En-tête avec salutation + niveau + progression
 class WelcomeHeader extends StatelessWidget {
   final String userName;
   final String currentLevel;
@@ -17,18 +18,18 @@ class WelcomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF5B9FD8),
-            Color(0xFF4A8BC2),
-          ],
+          colors: [Color(0xFF5B9FD8), Color(0xFF4A8BC2)],
         ),
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),
         ),
@@ -45,7 +46,7 @@ class WelcomeHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Bonjour,',
+                      l10n.hello,
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white.withOpacity(0.9),
@@ -67,11 +68,7 @@ class WelcomeHeader extends StatelessWidget {
                   children: [
                     IconButton(
                       onPressed: onNotificationTap,
-                      icon: const Icon(
-                        Icons.notifications_outlined,
-                        color: Colors.white,
-                        size: 28,
-                      ),
+                      icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 28),
                     ),
                     Positioned(
                       right: 8,
@@ -95,10 +92,7 @@ class WelcomeHeader extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1,
-                ),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,30 +100,19 @@ class WelcomeHeader extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Niveau actuel',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      Text(
+                        l10n.currentLevel,
+                        style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFDB33F),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           currentLevel,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
                         ),
                       ),
                     ],
@@ -140,20 +123,14 @@ class WelcomeHeader extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: progressPercentage / 100,
                       backgroundColor: Colors.white.withOpacity(0.3),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFFFDB33F),
-                      ),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFDB33F)),
                       minHeight: 8,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${progressPercentage.toInt()}% vers Expert',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.white.withOpacity(0.9),
-                      fontWeight: FontWeight.w500,
-                    ),
+                    l10n.progressToExpert.replaceAll('%', '${progressPercentage.toInt()}%'),
+                    style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
@@ -165,7 +142,7 @@ class WelcomeHeader extends StatelessWidget {
   }
 }
 
-/// Widget pour l'en-tête de section avec bouton "Voir tout"
+/// Titre de section avec bouton "Voir tout"
 class SectionHeader extends StatelessWidget {
   final String title;
   final VoidCallback onSeeAllTap;
@@ -178,26 +155,24 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3436),
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         TextButton(
           onPressed: onSeeAllTap,
-          child: const Text(
-            'Voir tout',
-            style: TextStyle(
-              color: Color(0xFF5B9FD8),
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
+          child: Text(
+            l10n.seeAll,
+            style: const TextStyle(color: Color(0xFF5B9FD8), fontWeight: FontWeight.w600, fontSize: 14),
           ),
         ),
       ],
@@ -205,7 +180,7 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
-/// Widget pour une carte de quiz recommandé
+/// Carte de quiz recommandé
 class QuizCard extends StatelessWidget {
   final String title;
   final String icon;
@@ -226,13 +201,16 @@ class QuizCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Color _getDifficultyColor() {
-    switch (difficulty.toLowerCase()) {
+  Color _getDifficultyColor(String diff) {
+    switch (diff.toLowerCase()) {
       case 'facile':
+      case 'easy':
         return const Color(0xFF00B894);
       case 'moyen':
+      case 'medium':
         return const Color(0xFFFDB33F);
       case 'difficile':
+      case 'hard':
         return const Color(0xFFE74C3C);
       default:
         return Colors.grey;
@@ -241,20 +219,18 @@ class QuizCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.grey[200]!),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
+            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
           ],
         ),
         child: Column(
@@ -268,59 +244,35 @@ class QuizCard extends StatelessWidget {
                     color: const Color(0xFF5B9FD8).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    icon,
-                    style: const TextStyle(fontSize: 24),
-                  ),
+                  child: Text(icon, style: const TextStyle(fontSize: 24)),
                 ),
                 const Spacer(),
                 if (hasAI)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFF6C5CE7).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(
-                          Icons.auto_awesome,
-                          size: 12,
-                          color: Color(0xFF6C5CE7),
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          'IA',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF6C5CE7),
-                          ),
-                        ),
+                        const Icon(Icons.auto_awesome, size: 12, color: Color(0xFF6C5CE7)),
+                        const SizedBox(width: 4),
+                        Text(l10n.ai, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF6C5CE7))),
                       ],
                     ),
                   ),
                 if (completionPercentage != null) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFF00B894).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       completionPercentage!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF00B894),
-                      ),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF00B894)),
                     ),
                   ),
                 ],
@@ -329,47 +281,25 @@ class QuizCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2D3436),
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(
-                  Icons.quiz,
-                  size: 16,
-                  color: Colors.grey[600],
-                ),
+                Icon(Icons.quiz, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(
-                  '$questionCount questions',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
+                  '$questionCount ${questionCount <= 1 ? l10n.question : l10n.questions}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 ),
                 const SizedBox(width: 12),
-                Container(
-                  width: 4,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    shape: BoxShape.circle,
-                  ),
-                ),
+                Container(width: 4, height: 4, decoration: BoxDecoration(color: Colors.grey[400], shape: BoxShape.circle)),
                 const SizedBox(width: 12),
                 Text(
                   difficulty,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: _getDifficultyColor(),
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 13, color: _getDifficultyColor(difficulty), fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -380,7 +310,7 @@ class QuizCard extends StatelessWidget {
   }
 }
 
-/// Widget pour une carte de vidéo
+/// Carte vidéo
 class VideoCard extends StatelessWidget {
   final String title;
   final String thumbnail;
@@ -399,21 +329,17 @@ class VideoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 280,
         margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -421,48 +347,27 @@ class VideoCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   child: Image.network(
                     thumbnail,
                     width: double.infinity,
                     height: 160,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: double.infinity,
-                        height: 160,
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.play_circle_outline,
-                          size: 48,
-                          color: Colors.grey,
-                        ),
-                      );
-                    },
+                    errorBuilder: (_, __, ___) => Container(
+                      width: double.infinity,
+                      height: 160,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.play_circle_outline, size: 48, color: Colors.grey),
+                    ),
                   ),
                 ),
                 Positioned(
                   bottom: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      duration,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(6)),
+                    child: Text(duration, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                   ),
                 ),
                 if (isNew)
@@ -470,22 +375,9 @@ class VideoCard extends StatelessWidget {
                     top: 8,
                     right: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFDB33F),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Nouveau',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(color: const Color(0xFFFDB33F), borderRadius: BorderRadius.circular(8)),
+                      child: Text(l10n.newLabel, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
                     ),
                   ),
               ],
@@ -494,11 +386,7 @@ class VideoCard extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               child: Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2D3436),
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
