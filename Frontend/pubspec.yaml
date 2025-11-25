@@ -41,6 +41,7 @@ flutter:
     - .env
   # ✅ NOUVEAU : Génération des traductions
   generate: true
+
   # Si vous avez des assets
   # assets:
   #   - assets/google_logo.png

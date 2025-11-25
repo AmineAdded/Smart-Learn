@@ -86,3 +86,10 @@ class SubjectCategory {
         return ALL_CATEGORIES;
     }
 }
+
+
+
+
+
+
+// ========== UserInterest : Intérêts de l'utilisateur (pour les recommandations) ==========
