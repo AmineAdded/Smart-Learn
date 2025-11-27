@@ -34,4 +34,5 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     List<String> findAllCategories();
     
     List<Video> findByIsFeaturedTrue();
+    boolean existsByYoutubeId(String youtubeId);
 }

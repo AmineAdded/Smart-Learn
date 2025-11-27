@@ -4,9 +4,11 @@ import com.example.dto.*;
 import com.example.dto.MessageResponse;
 import com.example.dto.video.*;
 import com.example.model.User;
+import com.example.model.Video;
 import com.example.model.VideoPlaylist;
 import com.example.model.VideoProgress;
 import com.example.repository.UserRepository;
+import com.example.repository.VideoRepository;
 import com.example.service.VideoNoteService;
 import com.example.service.VideoPlaylistService;
 import com.example.service.VideoService;
@@ -18,14 +20,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
+import com.example.service.KhanAcademyService;
+import com.example.repository.VideoRepository;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/videos")
 @Tag(name = "Vidéos", description = "Gestion de la bibliothèque de contenus vidéo")
 @PreAuthorize("hasRole('USER')")
+@Slf4j
+
 public class VideoController {
 
     @Autowired
@@ -37,6 +45,12 @@ public class VideoController {
     private UserRepository userRepository;
     @Autowired
     private VideoPlaylistService playlistService;
+    @Autowired
+private KhanAcademyService khanAcademyService;
+
+    @Autowired
+    private VideoRepository videoRepository; 
+
         // ========== MÉTHODE UTILITAIRE ==========
     
     /**
@@ -48,7 +62,82 @@ public class VideoController {
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
     }
     // ========== BF-027 à BF-033 : Liste et Recherche des Vidéos ==========
+   /**
+     * DELETE /api/videos/clear-all - Supprimer toutes les vidéos (admin only)
+     */
+    @DeleteMapping("/clear-all")
+    @Operation(summary = "Supprimer toutes les vidéos")
+    public ResponseEntity<MessageResponse> clearAllVideos() {
+        try {
+            long count = videoRepository.count();
+            videoRepository.deleteAll();
+            return ResponseEntity.ok(
+                new MessageResponse(count + " vidéos supprimées avec succès")
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new MessageResponse("Erreur lors de la suppression: " + e.getMessage()));
+        }
+    }
 
+// Ajoutez ces méthodes à votre VideoController.java existant
+
+/**
+ * POST /api/videos/init-khan - Import Khan Academy GRATUIT
+ * Import 100 vidéos éducatives vérifiées (100% gratuit)
+ */
+@PostMapping("/init-khan")
+@Operation(summary = "Importer Khan Academy (GRATUIT)")
+public ResponseEntity<MessageResponse> initializeKhanVideos() {
+    try {
+        log.info("🎓 Début import Khan Academy...");
+        
+        // Importer toutes les catégories
+        Map<String, Integer> results = khanAcademyService.importAllCategories();
+        
+        int totalImported = results.values().stream()
+                .mapToInt(Integer::intValue)
+                .sum();
+        
+        String details = results.entrySet().stream()
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .collect(Collectors.joining(", "));
+        
+        log.info("✅ Import Khan terminé: {} vidéos", totalImported);
+        
+        return ResponseEntity.ok(
+            new MessageResponse(
+                String.format("✅ %d vidéos Khan Academy importées avec succès! (%s)", 
+                    totalImported, details)
+            )
+        );
+        
+    } catch (Exception e) {
+        log.error("❌ Erreur import Khan: {}", e.getMessage(), e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(new MessageResponse("❌ Erreur: " + e.getMessage()));
+    }
+}
+
+/**
+ * GET /api/videos/khan/stats - Statistiques Khan Academy
+ */
+@GetMapping("/khan/stats")
+@Operation(summary = "Statistiques base Khan Academy")
+public ResponseEntity<Map<String, Object>> getKhanStats() {
+    Map<String, Object> stats = khanAcademyService.getDatabaseStats();
+    return ResponseEntity.ok(stats);
+}
+
+/**
+ * GET /api/videos/khan/categories - Catégories Khan disponibles
+ */
+@GetMapping("/khan/categories")
+@Operation(summary = "Catégories Khan Academy disponibles")
+public ResponseEntity<List<String>> getKhanCategories() {
+    List<String> categories = khanAcademyService.getAvailableCategories();
+    return ResponseEntity.ok(categories);
+}
     /**
      * GET /api/videos - Liste paginée des vidéos avec filtres et recherche
      * Supporte la recherche textuelle, filtres par catégorie/difficulté, tri
@@ -111,8 +200,7 @@ public class VideoController {
         // Cette méthode devrait être ajoutée au VideoService
         return ResponseEntity.ok(List.of(
             "Mathématiques", "Physique", "Chimie", "Biologie",
-            "Histoire", "Géographie", "Langues", "Informatique",
-            "Philosophie", "Économie"
+          "Informatique","Français","Anglais"
         ));
     }
 
@@ -135,25 +223,43 @@ public class VideoController {
     /**
      * GET /api/videos/favorites - Liste des vidéos favorites
      */
-    @GetMapping("/favorites")
-    @Operation(summary = "Vidéos favorites", 
-               description = "Récupère toutes les vidéos favorites de l'utilisateur")
+    @GetMapping(value = "/favorites", produces = "application/json; charset=UTF-8")
+    @Operation(summary = "Récupérer les favoris", 
+               description = "Liste toutes les vidéos favorites de l'utilisateur")
     public ResponseEntity<List<VideoDTO>> getFavorites() {
-        List<VideoDTO> favorites = videoService.getFavoriteVideos();
-        return ResponseEntity.ok(favorites);
+        try {
+            List<VideoDTO> favorites = videoService.getFavoriteVideos();
+            log.info("📹 Renvoi de {} favoris", favorites.size());
+            return ResponseEntity.ok(favorites);
+        } catch (Exception e) {
+            log.error("❌ Erreur getFavorites", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .build();
+        }
     }
 
-    /**
-     * POST /api/videos/{id}/favorite - Ajouter aux favoris
-     */
-    @PostMapping("/{id}/favorite")
-    @Operation(summary = "Ajouter aux favoris", 
-               description = "Ajoute une vidéo aux favoris de l'utilisateur")
-    public ResponseEntity<MessageResponse> addToFavorites(@PathVariable Long id) {
-        videoService.addToFavorites(id);
-        return ResponseEntity.ok(new MessageResponse("Vidéo ajoutée aux favoris"));
-    }
 
+    // /**
+    //  * POST /api/videos/{id}/favorite - Ajouter aux favoris
+    //  */
+    // @PostMapping("/{id}/favorite")
+    // @Operation(summary = "Ajouter aux favoris", 
+    //            description = "Ajoute une vidéo aux favoris de l'utilisateur")
+    // public ResponseEntity<MessageResponse> addToFavorites(@PathVariable Long id) {
+    //     videoService.addToFavorites(id);
+    //     return ResponseEntity.ok(new MessageResponse("Vidéo ajoutée aux favoris"));
+    // }
+/**
+ * POST /api/videos/{id}/favorite - Ajouter aux favoris + XP
+ */
+@PostMapping("/{id}/favorite")
+@Operation(summary = "Ajouter aux favoris", 
+           description = "Ajoute une vidéo aux favoris et gagne 5 XP")
+public ResponseEntity<AddXpResponse> addToFavorites(@PathVariable Long id) {
+    AddXpResponse response = videoService.addToFavorites(id);
+    return ResponseEntity.ok(response);
+}
     /**
      * DELETE /api/videos/{id}/favorite - Retirer des favoris
      */
@@ -167,20 +273,20 @@ public class VideoController {
 
     // ========== BF-029 à BF-031 : Suivi de Progression ==========
 
-    /**
-     * POST /api/videos/{id}/progress - Mettre à jour la progression
-     * Sauvegarde la position actuelle et marque comme complété si nécessaire
-     */
-    @PostMapping("/{id}/progress")
-    @Operation(summary = "Mettre à jour la progression", 
-               description = "Sauvegarde la progression de visionnage (position, temps regardé, complétion)")
-    public ResponseEntity<VideoProgress> updateProgress(
-            @PathVariable Long id,
-            @Valid @RequestBody VideoProgressRequest request) {
-        
-        VideoProgress progress = videoService.updateProgress(id, request);
-        return ResponseEntity.ok(progress);
-    }
+/**
+ * POST /api/videos/{id}/progress - Mettre à jour la progression + XP
+ */
+@PostMapping("/{id}/progress")
+@Operation(summary = "Mettre à jour la progression", 
+           description = "Sauvegarde la progression et donne 50 XP si complétée à 90%")
+public ResponseEntity<VideoProgressResponse> updateProgress(
+        @PathVariable Long id,
+        @Valid @RequestBody VideoProgressRequest request) {
+    
+    VideoProgressResponse response = videoService.updateProgress(id, request);
+    return ResponseEntity.ok(response);
+}
+
 
     /**
      * GET /api/videos/recent - Vidéos récemment regardées
@@ -221,22 +327,19 @@ public class VideoController {
         List<VideoNoteDTO> notes = videoNoteService.getNotesByVideo(videoId);
         return ResponseEntity.ok(notes);
     }
-
-    /**
-     * POST /api/videos/{id}/notes - Ajouter une note
-     * Permet d'ajouter une annotation à un timestamp précis
-     */
-    @PostMapping("/{videoId}/notes")
-    @Operation(summary = "Ajouter une note", 
-               description = "Ajoute une note personnelle sur une vidéo (avec timestamp optionnel)")
-    public ResponseEntity<VideoNoteDTO> addNote(
-            @PathVariable Long videoId,
-            @Valid @RequestBody VideoNoteRequest request) {
-        
-        VideoNoteDTO note = videoNoteService.addNote(videoId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(note);
-    }
-
+/**
+ * POST /api/videos/{videoId}/notes - Ajouter une note + XP
+ */
+@PostMapping("/{videoId}/notes")
+@Operation(summary = "Ajouter une note", 
+           description = "Ajoute une note personnelle et gagne 10 XP")
+public ResponseEntity<VideoNoteResponse> addNote(
+        @PathVariable Long videoId,
+        @Valid @RequestBody VideoNoteRequest request) {
+    
+    VideoNoteResponse response = videoNoteService.addNote(videoId, request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+}
     /**
      * PUT /api/videos/notes/{noteId} - Modifier une note
      */

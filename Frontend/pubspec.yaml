@@ -23,7 +23,9 @@ dependencies:
   # Stockage local
   shared_preferences: ^2.2.2
   flutter_dotenv: ^5.1.0
-
+  youtube_player_flutter: ^9.0.3  # Player YouTube intégré
+  cached_network_image: ^3.3.0
+  flutter_svg: ^2.0.9
   # ✅ NOUVEAU : Gestion du thèm
   provider: ^6.1.1
   # ✅ Internationalisation

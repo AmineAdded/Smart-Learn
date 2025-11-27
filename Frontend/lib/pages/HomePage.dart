@@ -8,6 +8,7 @@ import 'ProgressionPage.dart';
 import '../services/progress_service.dart';
 import '../models/user_progress.dart';
 import '../l10n/app_localizations.dart';
+import 'videos/VideosPage.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -64,10 +65,15 @@ class _HomePageState extends State<HomePage> {
         );
         break;
       case 2:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.videosInDevelopment)),
-        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const VideosPage()),
+        ).then((_) {
+          setState(() => _currentNavIndex = 0);
+          _loadAllData();
+        });
         break;
+
       case 3:
         Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressionPage()))
             .then((_) => setState(() => _currentNavIndex = 0));

@@ -1,4 +1,5 @@
 package com.example.model;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,8 +9,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-
-// ========== VideoProgress : Suivi de la progression de visionnage ==========
 
 @Entity
 @Table(name = "video_progress", 
@@ -32,67 +31,88 @@ public class VideoProgress {
     @JoinColumn(name = "video_id", nullable = false)
     private Video video;
     
-    /**
-     * Position actuelle dans la vidéo (en secondes)
-     * Permet de reprendre la vidéo où l'utilisateur s'est arrêté
-     */
-    @Column(nullable = false)
+    @Column(name = "last_timestamp", nullable = false)
     @Builder.Default
     private Integer lastTimestamp = 0;
     
-    /**
-     * Temps total regardé (en secondes)
-     * Peut être différent de lastTimestamp si l'utilisateur saute des parties
-     */
-    @Column(nullable = false)
+    @Column(name = "watched_seconds", nullable = false)
     @Builder.Default
     private Integer watchedSeconds = 0;
     
-    /**
-     * Pourcentage de progression (0-100)
-     */
-    @Column(nullable = false)
+    @Column(name = "progress_percentage", nullable = false)
     @Builder.Default
     private Double progressPercentage = 0.0;
     
-    /**
-     * Vidéo marquée comme terminée
-     */
     @Column(nullable = false)
     @Builder.Default
     private Boolean completed = false;
     
-    /**
-     * Date de dernière visualisation
-     */
-    @Column(nullable = false)
-    private LocalDateTime lastWatchedAt;
+    @Column(name = "watch_count", nullable = false)
+    @Builder.Default
+    private Integer watchCount = 1;
+    
+    // ✅ CORRECTION : Initialiser lastWatchedAt
+    @Column(name = "last_watched_at", nullable = false)
+    @Builder.Default
+    private LocalDateTime lastWatchedAt = LocalDateTime.now();
     
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     @UpdateTimestamp
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
     /**
-     * Mise à jour de la progression
-     * Calcule automatiquement le pourcentage
+     * ✅ Méthode pour mettre à jour la progression
      */
     public void updateProgress(Integer currentTimestamp, Integer videoDuration) {
-        this.lastTimestamp = currentTimestamp;
-        this.lastWatchedAt = LocalDateTime.now();
-        
-        if (videoDuration != null && videoDuration > 0) {
-            this.progressPercentage = (currentTimestamp * 100.0) / videoDuration;
-            
-            // Marquer comme complété si > 90%
-            if (this.progressPercentage >= 90.0) {
-                this.completed = true;
-                this.progressPercentage = 100.0;
-            }
+        if (currentTimestamp == null || videoDuration == null || videoDuration == 0) {
+            return;
         }
+
+        this.lastTimestamp = currentTimestamp;
+        
+        // Calculer le pourcentage
+        double percentage = (currentTimestamp.doubleValue() / videoDuration.doubleValue()) * 100.0;
+        this.progressPercentage = Math.min(100.0, Math.max(0.0, percentage));
+
+        // Auto-complétion si ≥ 90%
+        if (this.progressPercentage >= 90.0 && !this.completed) {
+            this.completed = true;
+            this.progressPercentage = 100.0;
+        }
+
+        // Incrémenter watchCount si retour au début
+        if (currentTimestamp < 30) {
+            this.watchCount++;
+        }
+        
+        // ✅ IMPORTANT : Mettre à jour lastWatchedAt
+        this.lastWatchedAt = LocalDateTime.now();
+    }
+    
+    /**
+     * ✅ Initialisation automatique avant sauvegarde
+     */
+    @PrePersist
+    protected void onCreate() {
+        if (this.lastWatchedAt == null) {
+            this.lastWatchedAt = LocalDateTime.now();
+        }
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+    }
+    
+    /**
+     * ✅ Mise à jour automatique
+     */
+    @PreUpdate
+    protected void onUpdate() {
+        this.lastWatchedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
     
     /**
@@ -105,7 +125,7 @@ public class VideoProgress {
     }
     
     /**
-     * Formater le temps de visionnage pour l'affichage
+     * Formater le temps de visionnage
      */
     public String getFormattedWatchTime() {
         int hours = watchedSeconds / 3600;

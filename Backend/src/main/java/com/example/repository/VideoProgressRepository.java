@@ -28,4 +28,11 @@ public interface VideoProgressRepository extends JpaRepository<VideoProgress, Lo
     
     @Query("SELECT SUM(vp.watchedSeconds) FROM VideoProgress vp WHERE vp.user.id = :userId")
     Integer getTotalWatchTimeByUserId(@Param("userId") Long userId);
+
+
+
+    /**
+     * Vérifier si une progression existe
+     */
+    boolean existsByUserAndVideo(User user, Video video);
 }

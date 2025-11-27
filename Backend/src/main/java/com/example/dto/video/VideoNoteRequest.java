@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 public class VideoNoteRequest {
     private String content;
     private Integer timestamp; // Position dans la vidéo (optionnel)
+    
 }

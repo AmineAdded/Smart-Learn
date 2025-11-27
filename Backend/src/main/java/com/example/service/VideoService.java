@@ -1,4 +1,5 @@
 package com.example.service;
+
 import com.example.dto.*;
 import com.example.dto.video.*;
 import com.example.model.*;
@@ -11,11 +12,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class VideoService {
 
     @Autowired
@@ -36,6 +39,16 @@ public class VideoService {
     @Autowired
     private UserInterestRepository interestRepository;
 
+    @Autowired
+    private ProgressService progressService;
+
+    // 🎯 CONSTANTES XP
+    private static final int XP_VIDEO_COMPLETED = 50;
+    private static final int XP_NOTE_ADDED = 10;
+    private static final int XP_FAVORITE_ADDED = 5;
+    private static final int XP_MILESTONE_5_VIDEOS = 100;
+    private static final int MILESTONE_5_VIDEOS = 5;
+
     /**
      * Récupérer l'utilisateur connecté
      */
@@ -54,7 +67,6 @@ public class VideoService {
         int page = request.getPage() != null ? request.getPage() : 0;
         int size = request.getSize() != null ? request.getSize() : 20;
         
-        // Tri par défaut : récent
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         if ("popular".equals(request.getSortBy())) {
             sort = Sort.by(Sort.Direction.DESC, "viewCount");
@@ -65,7 +77,6 @@ public class VideoService {
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Video> videoPage;
         
-        // Appliquer les filtres
         if (request.getQuery() != null && !request.getQuery().isEmpty()) {
             videoPage = videoRepository.searchVideos(request.getQuery(), pageable);
         } else if (request.getCategory() != null && request.getDifficulty() != null) {
@@ -78,7 +89,6 @@ public class VideoService {
             videoPage = videoRepository.findByIsActiveTrue(pageable);
         }
         
-        // Convertir en DTO
         List<VideoDTO> videoDTOs = videoPage.getContent().stream()
                 .map(video -> convertToDTO(video, user))
                 .collect(Collectors.toList());
@@ -101,7 +111,6 @@ public class VideoService {
         Video video = videoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vidéo non trouvée"));
         
-        // Incrémenter le compteur de vues
         video.setViewCount(video.getViewCount() + 1);
         videoRepository.save(video);
         
@@ -121,15 +130,14 @@ public class VideoService {
     }
 
     /**
-     * Ajouter une vidéo aux favoris
+     * 🆕 Ajouter une vidéo aux favoris + XP
      */
     @Transactional
-    public void addToFavorites(Long videoId) {
+    public AddXpResponse addToFavorites(Long videoId) {
         User user = getCurrentUser();
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new RuntimeException("Vidéo non trouvée"));
         
-        // Vérifier si déjà en favori
         if (favoriteRepository.existsByUserAndVideo(user, video)) {
             throw new RuntimeException("Vidéo déjà dans les favoris");
         }
@@ -141,9 +149,18 @@ public class VideoService {
         
         favoriteRepository.save(favorite);
         
-        // Incrémenter le compteur
         video.setFavoriteCount(video.getFavoriteCount() + 1);
         videoRepository.save(video);
+        
+        // 🎯 AJOUTER XP
+        log.info("⭐ Ajout aux favoris - Attribution de {} XP", XP_FAVORITE_ADDED);
+        AddXpResponse xpResponse = progressService.addXp(
+            XP_FAVORITE_ADDED,
+            "Vidéo ajoutée aux favoris: " + video.getTitle(),
+            "FAVORITE_ADDED"
+        );
+        
+        return xpResponse;
     }
 
     /**
@@ -157,37 +174,183 @@ public class VideoService {
         
         favoriteRepository.deleteByUserAndVideo(user, video);
         
-        // Décrémenter le compteur
         video.setFavoriteCount(Math.max(0, video.getFavoriteCount() - 1));
         videoRepository.save(video);
     }
 
     /**
-     * Mettre à jour la progression de visionnage
+     * 🆕 Mettre à jour la progression de visionnage + XP si complété
      */
-    @Transactional
-    public VideoProgress updateProgress(Long videoId, VideoProgressRequest request) {
-        User user = getCurrentUser();
-        Video video = videoRepository.findById(videoId)
-                .orElseThrow(() -> new RuntimeException("Vidéo non trouvée"));
+    // @Transactional
+    // public VideoProgressResponse updateProgress(Long videoId, VideoProgressRequest request) {
+    //     User user = getCurrentUser();
+    //     Video video = videoRepository.findById(videoId)
+    //             .orElseThrow(() -> new RuntimeException("Vidéo non trouvée"));
         
-        VideoProgress progress = progressRepository.findByUserAndVideo(user, video)
-                .orElseGet(() -> VideoProgress.builder()
+    //     VideoProgress progress = progressRepository.findByUserAndVideo(user, video)
+    //             .orElseGet(() -> VideoProgress.builder()
+    //                     .user(user)
+    //                     .video(video)
+    //                     .build());
+        
+    //     // Sauvegarder l'état avant modification
+    //    boolean wasCompleted = progress.getCompleted() != null && progress.getCompleted();        
+    //     // Mettre à jour la progression
+    //     progress.updateProgress(request.getCurrentTimestamp(), video.getDuration());
+        
+    //     // Complétion automatique si ≥ 90%
+    //     boolean autoCompleted = progress.getProgressPercentage() >= 90.0 && !wasCompleted;
+        
+    //     if (request.getCompleted() != null && request.getCompleted()) {
+    //         progress.setCompleted(true);
+    //         progress.setProgressPercentage(100.0);
+    //     } else if (autoCompleted) {
+    //         progress.setCompleted(true);
+    //     }
+        
+    //     progressRepository.save(progress);
+        
+    //     // 🎯 ATTRIBUTION XP SI VIDÉO COMPLÉTÉE
+    // AddXpResponse xpResponse = null;
+    // // ✅ CORRECTION : Vérifier l'état actuel
+    // boolean isNowCompleted = progress.getCompleted() != null && progress.getCompleted();
+    
+    // if ((isNowCompleted && !wasCompleted) || autoCompleted) {
+    //     log.info("🎥 Vidéo complétée - Attribution de {} XP", XP_VIDEO_COMPLETED);
+    //     xpResponse = progressService.addXp(
+    //         XP_VIDEO_COMPLETED,
+    //         "Vidéo complétée: " + video.getTitle(),
+    //         "VIDEO_COMPLETED"
+    //     );
+            
+    //         // 🎯 VÉRIFIER MILESTONE 5 VIDÉOS
+    //         Integer completedCount = progressRepository.countCompletedByUserId(user.getId());
+    //         if (completedCount != null && completedCount % MILESTONE_5_VIDEOS == 0) {
+    //             log.info("🎯 MILESTONE! {} vidéos complétées - Bonus {} XP", 
+    //                 completedCount, XP_MILESTONE_5_VIDEOS);
+    //             xpResponse = progressService.addXp(
+    //                 XP_MILESTONE_5_VIDEOS,
+    //                 String.format("Milestone: %d vidéos complétées!", completedCount),
+    //                 "VIDEO_MILESTONE"
+    //             );
+    //         }
+    //     }
+        
+    //     return VideoProgressResponse.builder()
+    //             .progress(progress)
+    //             .xpResponse(xpResponse)
+    //             .videoCompleted(isNowCompleted && !wasCompleted) 
+    //             .milestoneReached(xpResponse != null && xpResponse.getMessage().contains("Milestone"))
+    //             .build();
+    // }
+/**
+ * 🆕 Mettre à jour la progression de visionnage + XP si complété
+ */
+@Transactional
+public VideoProgressResponse updateProgress(Long videoId, VideoProgressRequest request) {
+    User user = getCurrentUser();
+    Video video = videoRepository.findById(videoId)
+            .orElseThrow(() -> new RuntimeException("Vidéo non trouvée"));
+    
+    log.info("📹 UPDATE PROGRESS - User: {}, Video ID: {}, Title: {}", 
+        user.getEmail(), video.getId(), video.getTitle());
+    log.info("📹 Request - Timestamp: {}, Completed: {}", 
+        request.getCurrentTimestamp(), request.getCompleted());
+    log.info("📹 Video Duration: {} secondes", video.getDuration());
+    
+    // Récupérer ou créer la progression
+    VideoProgress progress = progressRepository.findByUserAndVideo(user, video)
+            .orElseGet(() -> {
+                log.info("🆕 CRÉATION nouvelle progression");
+                VideoProgress newProgress = VideoProgress.builder()
                         .user(user)
                         .video(video)
-                        .build());
+                        .lastTimestamp(0)
+                        .progressPercentage(0.0)
+                        .completed(false)
+                        .watchCount(1)
+                        .watchedSeconds(0)
+                        .lastWatchedAt(java.time.LocalDateTime.now())
+                        .build();
+                return newProgress;
+            });
+    
+    // Sauvegarder l'état avant modification
+    boolean wasCompleted = progress.getCompleted() != null && progress.getCompleted();
+    
+    log.info("📊 AVANT - ID: {}, Completed: {}, Percentage: {}%, Timestamp: {}s", 
+        progress.getId(), wasCompleted, progress.getProgressPercentage(), progress.getLastTimestamp());
+    
+    // Mettre à jour la progression
+    progress.updateProgress(request.getCurrentTimestamp(), video.getDuration());
+    
+    // Complétion manuelle si demandée
+    if (request.getCompleted() != null && request.getCompleted()) {
+        progress.setCompleted(true);
+        progress.setProgressPercentage(100.0);
+        log.info("✅ Complétion MANUELLE forcée");
+    }
+    
+    boolean autoCompleted = progress.getProgressPercentage() >= 90.0 && !wasCompleted;
+    if (autoCompleted) {
+        progress.setCompleted(true);
+        log.info("✅ Complétion AUTOMATIQUE à {}%", progress.getProgressPercentage());
+    }
+    
+    log.info("📊 APRÈS - Completed: {}, Percentage: {}%, Timestamp: {}s", 
+        progress.getCompleted(), progress.getProgressPercentage(), progress.getLastTimestamp());
+    
+    // 💾 SAUVEGARDE EN BASE
+    try {
+        VideoProgress savedProgress = progressRepository.save(progress);
+        log.info("✅ ✅ ✅ PROGRESSION SAUVEGARDÉE - ID: {}", savedProgress.getId());
         
-        // Mettre à jour la progression
-        progress.updateProgress(request.getCurrentTimestamp(), video.getDuration());
-        
-        if (request.getCompleted() != null && request.getCompleted()) {
-            progress.setCompleted(true);
-            progress.setProgressPercentage(100.0);
+        // ✅ Vérifier immédiatement en base
+        VideoProgress verif = progressRepository.findById(savedProgress.getId()).orElse(null);
+        if (verif != null) {
+            log.info("✅ VÉRIFICATION - Timestamp en base: {}s, Percentage: {}%", 
+                verif.getLastTimestamp(), verif.getProgressPercentage());
+        } else {
+            log.error("❌ ERREUR - Progression introuvable après save!");
         }
         
-        return progressRepository.save(progress);
+    } catch (Exception e) {
+        log.error("❌ ❌ ❌ ERREUR SAUVEGARDE: {}", e.getMessage(), e);
+        throw new RuntimeException("Impossible de sauvegarder la progression: " + e.getMessage());
     }
-
+    
+    // 🎯 ATTRIBUTION XP SI VIDÉO COMPLÉTÉE
+    AddXpResponse xpResponse = null;
+    boolean isNowCompleted = progress.getCompleted() != null && progress.getCompleted();
+    
+    if ((isNowCompleted && !wasCompleted) || autoCompleted) {
+        log.info("🎥 VIDÉO COMPLÉTÉE - Attribution de {} XP", XP_VIDEO_COMPLETED);
+        xpResponse = progressService.addXp(
+            XP_VIDEO_COMPLETED,
+            "Vidéo complétée: " + video.getTitle(),
+            "VIDEO_COMPLETED"
+        );
+        
+        // 🎯 VÉRIFIER MILESTONE 5 VIDÉOS
+        Integer completedCount = progressRepository.countCompletedByUserId(user.getId());
+        if (completedCount != null && completedCount % MILESTONE_5_VIDEOS == 0) {
+            log.info("🎯 MILESTONE! {} vidéos complétées - Bonus {} XP", 
+                completedCount, XP_MILESTONE_5_VIDEOS);
+            xpResponse = progressService.addXp(
+                XP_MILESTONE_5_VIDEOS,
+                String.format("Milestone: %d vidéos complétées!", completedCount),
+                "VIDEO_MILESTONE"
+            );
+        }
+    }
+    
+    return VideoProgressResponse.builder()
+            .progress(progress)
+            .xpResponse(xpResponse)
+            .videoCompleted(isNowCompleted && !wasCompleted)
+            .milestoneReached(xpResponse != null && xpResponse.getMessage().contains("Milestone"))
+            .build();
+}
     /**
      * Récupérer les vidéos récemment regardées
      */
@@ -207,13 +370,11 @@ public class VideoService {
     public VideoRecommendationsResponse getRecommendations() {
         User user = getCurrentUser();
         
-        // Récupérer les intérêts de l'utilisateur
         List<UserInterest> interests = interestRepository.findByUserAndIsActiveTrue(user);
         List<String> categories = interests.stream()
                 .map(UserInterest::getCategory)
                 .collect(Collectors.toList());
         
-        // Si pas d'intérêts, retourner les vidéos populaires
         if (categories.isEmpty()) {
             Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "viewCount"));
             Page<Video> popular = videoRepository.findByIsActiveTrue(pageable);
@@ -229,7 +390,6 @@ public class VideoService {
                     .build();
         }
         
-        // Recommandations basées sur les intérêts
         List<Video> recommended = videoRepository.findAll().stream()
                 .filter(video -> categories.contains(video.getCategory()))
                 .filter(video -> video.getDifficulty().equals(user.getNiveau()) || 
@@ -273,7 +433,7 @@ public class VideoService {
     /**
      * Convertir Video en VideoDTO
      */
-   public VideoDTO convertToDTO(Video video, User user) {
+    public VideoDTO convertToDTO(Video video, User user) {
         VideoProgress progress = progressRepository.findByUserAndVideo(user, video).orElse(null);
         boolean isFavorite = favoriteRepository.existsByUserAndVideo(user, video);
         
