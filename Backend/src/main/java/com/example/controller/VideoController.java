@@ -5,16 +5,19 @@ import com.example.dto.MessageResponse;
 import com.example.dto.video.*;
 import com.example.model.User;
 import com.example.model.Video;
-import com.example.model.VideoPlaylist;
+
 import com.example.model.VideoProgress;
 import com.example.repository.UserRepository;
 import com.example.repository.VideoRepository;
 import com.example.service.VideoNoteService;
-import com.example.service.VideoPlaylistService;
+
 import com.example.service.VideoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.MediaType;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,8 +46,7 @@ public class VideoController {
     private VideoNoteService videoNoteService;
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private VideoPlaylistService playlistService;
+
     @Autowired
 private KhanAcademyService khanAcademyService;
 
@@ -80,44 +82,7 @@ private KhanAcademyService khanAcademyService;
         }
     }
 
-// Ajoutez ces méthodes à votre VideoController.java existant
 
-/**
- * POST /api/videos/init-khan - Import Khan Academy GRATUIT
- * Import 100 vidéos éducatives vérifiées (100% gratuit)
- */
-@PostMapping("/init-khan")
-@Operation(summary = "Importer Khan Academy (GRATUIT)")
-public ResponseEntity<MessageResponse> initializeKhanVideos() {
-    try {
-        log.info("🎓 Début import Khan Academy...");
-        
-        // Importer toutes les catégories
-        Map<String, Integer> results = khanAcademyService.importAllCategories();
-        
-        int totalImported = results.values().stream()
-                .mapToInt(Integer::intValue)
-                .sum();
-        
-        String details = results.entrySet().stream()
-                .map(e -> e.getKey() + ": " + e.getValue())
-                .collect(Collectors.joining(", "));
-        
-        log.info("✅ Import Khan terminé: {} vidéos", totalImported);
-        
-        return ResponseEntity.ok(
-            new MessageResponse(
-                String.format("✅ %d vidéos Khan Academy importées avec succès! (%s)", 
-                    totalImported, details)
-            )
-        );
-        
-    } catch (Exception e) {
-        log.error("❌ Erreur import Khan: {}", e.getMessage(), e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(new MessageResponse("❌ Erreur: " + e.getMessage()));
-    }
-}
 
 /**
  * GET /api/videos/khan/stats - Statistiques Khan Academy
@@ -223,22 +188,31 @@ public ResponseEntity<List<String>> getKhanCategories() {
     /**
      * GET /api/videos/favorites - Liste des vidéos favorites
      */
-    @GetMapping(value = "/favorites", produces = "application/json; charset=UTF-8")
-    @Operation(summary = "Récupérer les favoris", 
-               description = "Liste toutes les vidéos favorites de l'utilisateur")
-    public ResponseEntity<List<VideoDTO>> getFavorites() {
-        try {
-            List<VideoDTO> favorites = videoService.getFavoriteVideos();
-            log.info("📹 Renvoi de {} favoris", favorites.size());
-            return ResponseEntity.ok(favorites);
-        } catch (Exception e) {
-            log.error("❌ Erreur getFavorites", e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .build();
-        }
-    }
-
+    // @GetMapping(value = "/favorites", produces = "application/json; charset=UTF-8")
+    // @Operation(summary = "Récupérer les favoris", 
+    //            description = "Liste toutes les vidéos favorites de l'utilisateur")
+    // public ResponseEntity<List<VideoDTO>> getFavorites() {
+    //     try {
+    //         List<VideoDTO> favorites = videoService.getFavoriteVideos();
+    //         log.info("📹 Renvoi de {} favoris", favorites.size());
+    //         return ResponseEntity.ok(favorites);
+    //     } catch (Exception e) {
+    //         log.error("❌ Erreur getFavorites", e);
+    //         return ResponseEntity
+    //                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                 .build();
+    //     }
+    // }
+@GetMapping(value = "/my-favorites", produces = MediaType.APPLICATION_JSON_VALUE)
+@Operation(summary = "Récupérer les favoris")
+public ResponseEntity<List<VideoDTO>> getFavorites() {
+    List<VideoDTO> favorites = videoService.getFavoriteVideos();
+    log.info("Envoi de {} favoris", favorites.size());
+    
+    return ResponseEntity.ok()
+            .header("Content-Type", "application/json; charset=UTF-8")
+            .body(favorites);
+}
 
     // /**
     //  * POST /api/videos/{id}/favorite - Ajouter aux favoris
@@ -403,63 +377,8 @@ public ResponseEntity<VideoNoteResponse> addNote(
     }
 
     
-/**
- * POST /api/videos/playlists - Créer une playlist
- */
-@PostMapping("/playlists")
-@Operation(summary = "Créer une playlist")
-public ResponseEntity<VideoPlaylist> createPlaylist(
-        @Valid @RequestBody CreatePlaylistRequest request) {
-    User user = getCurrentUser();
-    VideoPlaylist playlist = playlistService.createPlaylist(request, user);
-    return ResponseEntity.status(HttpStatus.CREATED).body(playlist);
-}
 
-/**
- * GET /api/videos/playlists/my - Mes playlists
- */
-@GetMapping("/playlists/my")
-@Operation(summary = "Mes playlists")
-public ResponseEntity<List<VideoPlaylist>> getMyPlaylists() {
-    User user = getCurrentUser();
-    List<VideoPlaylist> playlists = playlistService.getMyPlaylists(user);
-    return ResponseEntity.ok(playlists);
-}
 
-/**
- * GET /api/videos/playlists/public - Playlists publiques
- */
-@GetMapping("/playlists/public")
-@Operation(summary = "Playlists publiques")
-public ResponseEntity<List<VideoPlaylist>> getPublicPlaylists() {
-    List<VideoPlaylist> playlists = playlistService.getPublicPlaylists();
-    return ResponseEntity.ok(playlists);
-}
 
-/**
- * POST /api/videos/playlists/{playlistId}/videos/{videoId} - Ajouter vidéo
- */
-@PostMapping("/playlists/{playlistId}/videos/{videoId}")
-@Operation(summary = "Ajouter une vidéo à la playlist")
-public ResponseEntity<MessageResponse> addVideoToPlaylist(
-        @PathVariable Long playlistId,
-        @PathVariable Long videoId) {
-    User user = getCurrentUser();
-    playlistService.addVideoToPlaylist(playlistId, videoId, user);
-    return ResponseEntity.ok(new MessageResponse("Vidéo ajoutée à la playlist"));
-}
-
-/**
- * DELETE /api/videos/playlists/{playlistId}/videos/{videoId} - Retirer vidéo
- */
-@DeleteMapping("/playlists/{playlistId}/videos/{videoId}")
-@Operation(summary = "Retirer une vidéo de la playlist")
-public ResponseEntity<MessageResponse> removeVideoFromPlaylist(
-        @PathVariable Long playlistId,
-        @PathVariable Long videoId) {
-    User user = getCurrentUser();
-    playlistService.removeVideoFromPlaylist(playlistId, videoId, user);
-    return ResponseEntity.ok(new MessageResponse("Vidéo retirée de la playlist"));
-}
 }
 

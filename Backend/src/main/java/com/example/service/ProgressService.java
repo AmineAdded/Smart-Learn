@@ -152,40 +152,95 @@ public class ProgressService {
     /**
      * Obtenir la progression hebdomadaire
      */
-    public WeeklyProgressDTO getWeeklyProgress() {
-        User user = getCurrentUser();
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime weekStart = now.with(DayOfWeek.MONDAY).truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime weekEnd = now.with(DayOfWeek.SUNDAY).plusDays(1).truncatedTo(ChronoUnit.DAYS);
-        
-        List<QuizResult> thisWeekResults = quizResultRepository.findByUserIdAndDateRange(
-            user.getId(), weekStart, weekEnd
-        );
-        
-        LocalDateTime lastWeekStart = weekStart.minusWeeks(1);
-        LocalDateTime lastWeekEnd = weekEnd.minusWeeks(1);
-        List<QuizResult> lastWeekResults = quizResultRepository.findByUserIdAndDateRange(
-            user.getId(), lastWeekStart, lastWeekEnd
-        );
-        
-        int currentWeekXp = thisWeekResults.stream().mapToInt(QuizResult::getXpEarned).sum();
-        int lastWeekXp = lastWeekResults.stream().mapToInt(QuizResult::getXpEarned).sum();
-        
-        double changePercentage = lastWeekXp == 0 ? 100.0 :
-            ((currentWeekXp - lastWeekXp) * 100.0 / lastWeekXp);
-        
-        List<WeeklyProgressDTO.DailyProgress> dailyProgress = generateDailyProgress(
-            weekStart, thisWeekResults
-        );
-        
-        return WeeklyProgressDTO.builder()
-            .currentWeekXp(currentWeekXp)
-            .lastWeekXp(lastWeekXp)
-            .changePercentage(changePercentage)
-            .dailyProgress(dailyProgress)
-            .build();
-    }
+// Add this method to your ProgressService class
 
+// Replace the getWeeklyProgress() method in your ProgressService class
+
+public WeeklyProgressDTO getWeeklyProgress() {
+    String email = SecurityContextHolder.getContext().getAuthentication().getName();
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+    
+    LocalDateTime now = LocalDateTime.now();
+    
+    // Semaine courante (du lundi au dimanche)
+    LocalDateTime currentWeekStart = now.with(DayOfWeek.MONDAY).truncatedTo(ChronoUnit.DAYS);
+    LocalDateTime currentWeekEnd = currentWeekStart.plusDays(7);
+    
+    // Semaine précédente
+    LocalDateTime lastWeekStart = currentWeekStart.minusWeeks(1);
+    LocalDateTime lastWeekEnd = currentWeekStart;
+    
+    // Récupérer les résultats de la semaine courante
+    List<QuizResult> currentWeekResults = quizResultRepository.findByUserIdAndDateRange(
+        user.getId(), currentWeekStart, currentWeekEnd
+    );
+    
+    // Récupérer les résultats de la semaine précédente
+    List<QuizResult> lastWeekResults = quizResultRepository.findByUserIdAndDateRange(
+        user.getId(), lastWeekStart, lastWeekEnd
+    );
+    
+    // Calculer les XP totaux
+    int currentWeekXp = currentWeekResults.stream()
+        .mapToInt(QuizResult::getXpEarned)
+        .sum();
+    
+    int lastWeekXp = lastWeekResults.stream()
+        .mapToInt(QuizResult::getXpEarned)
+        .sum();
+    
+    // Calculer le pourcentage de changement
+    double changePercentage = 0.0;
+    if (lastWeekXp > 0) {
+        changePercentage = ((double) (currentWeekXp - lastWeekXp) / lastWeekXp) * 100;
+    } else if (currentWeekXp > 0) {
+        changePercentage = 100.0;
+    }
+    
+    // Créer la progression quotidienne pour les 7 derniers jours
+    List<WeeklyProgressDTO.DailyProgress> dailyProgress = new ArrayList<>();
+    String[] dayLabels = {"Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"};
+    
+    for (int i = 0; i < 7; i++) {
+        LocalDateTime dayStart = currentWeekStart.plusDays(i);
+        LocalDateTime dayEnd = dayStart.plusDays(1);
+        
+        int dayXp = currentWeekResults.stream()
+            .filter(qr -> !qr.getCompletedAt().isBefore(dayStart) && qr.getCompletedAt().isBefore(dayEnd))
+            .mapToInt(QuizResult::getXpEarned)
+            .sum();
+        
+        int quizCount = (int) currentWeekResults.stream()
+            .filter(qr -> !qr.getCompletedAt().isBefore(dayStart) && qr.getCompletedAt().isBefore(dayEnd))
+            .count();
+        
+        int studyTime = currentWeekResults.stream()
+            .filter(qr -> !qr.getCompletedAt().isBefore(dayStart) && qr.getCompletedAt().isBefore(dayEnd))
+            .mapToInt(QuizResult::getTimeSpentMinutes)
+            .sum();
+        
+        boolean hasActivity = dayXp > 0;
+        
+        WeeklyProgressDTO.DailyProgress dayProgress = WeeklyProgressDTO.DailyProgress.builder()
+            .day(dayLabels[i])
+            .fullDate(dayStart.format(DateTimeFormatter.ISO_DATE))
+            .xpEarned(dayXp)
+            .quizCompleted(quizCount)
+            .studyTimeMinutes(studyTime)
+            .hasActivity(hasActivity)
+            .build();
+        
+        dailyProgress.add(dayProgress);
+    }
+    
+    return WeeklyProgressDTO.builder()
+        .currentWeekXp(currentWeekXp)
+        .lastWeekXp(lastWeekXp)
+        .changePercentage(changePercentage)
+        .dailyProgress(dailyProgress)
+        .build();
+}
     /**
      * Mettre à jour le progrès après un quiz
      */
@@ -272,38 +327,42 @@ public class ProgressService {
         return goals;
     }
 
-    private List<WeeklyProgressDTO.DailyProgress> generateDailyProgress(
-        LocalDateTime weekStart, List<QuizResult> results
-    ) {
-        List<WeeklyProgressDTO.DailyProgress> dailyProgress = new ArrayList<>();
-        String[] days = {"Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"};
+private List<WeeklyProgressDTO.DailyProgress> generateDailyProgress(
+    LocalDateTime weekStart, List<QuizResult> results
+) {
+    List<WeeklyProgressDTO.DailyProgress> dailyProgress = new ArrayList<>();
+    String[] days = {"Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"};
+    
+    for (int i = 0; i < 7; i++) {
+        LocalDateTime dayStart = weekStart.plusDays(i).truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime dayEnd = dayStart.plusDays(1);
         
-        for (int i = 0; i < 7; i++) {
-            LocalDateTime day = weekStart.plusDays(i);
-            LocalDateTime dayEnd = day.plusDays(1);
-            
-            List<QuizResult> dayResults = results.stream()
-                .filter(r -> r.getCompletedAt().isAfter(day) && 
-                            r.getCompletedAt().isBefore(dayEnd))
-                .collect(Collectors.toList());
-            
-            int xp = dayResults.stream().mapToInt(QuizResult::getXpEarned).sum();
-            int quizCount = dayResults.size();
-            int studyTime = dayResults.stream()
-                .mapToInt(QuizResult::getTimeSpentMinutes).sum();
-            
-            dailyProgress.add(WeeklyProgressDTO.DailyProgress.builder()
-                .day(days[i])
-                .fullDate(day.format(DateTimeFormatter.ISO_DATE))
-                .xpEarned(xp)
-                .quizCompleted(quizCount)
-                .studyTimeMinutes(studyTime)
-                .hasActivity(quizCount > 0)
-                .build());
-        }
+        // Filtrer les résultats pour ce jour spécifique
+        List<QuizResult> dayResults = results.stream()
+            .filter(r -> {
+                LocalDateTime completedAt = r.getCompletedAt();
+                // Vérification que la date est bien dans l'intervalle [dayStart, dayEnd[
+                return !completedAt.isBefore(dayStart) && completedAt.isBefore(dayEnd);
+            })
+            .collect(Collectors.toList());
         
-        return dailyProgress;
+        int xp = dayResults.stream().mapToInt(QuizResult::getXpEarned).sum();
+        int quizCount = dayResults.size();
+        int studyTime = dayResults.stream()
+            .mapToInt(QuizResult::getTimeSpentMinutes).sum();
+        
+        dailyProgress.add(WeeklyProgressDTO.DailyProgress.builder()
+            .day(days[i])
+            .fullDate(dayStart.format(DateTimeFormatter.ISO_DATE))
+            .xpEarned(xp)
+            .quizCompleted(quizCount)
+            .studyTimeMinutes(studyTime)
+            .hasActivity(quizCount > 0)
+            .build());
     }
+    
+    return dailyProgress;
+}
 
     private void updateStreak(UserProgress progress) {
         LocalDateTime now = LocalDateTime.now();

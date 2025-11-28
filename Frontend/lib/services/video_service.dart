@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/video.dart';
 import '../models/video_note.dart';
 import '../models/video_playlist.dart';
@@ -8,6 +9,8 @@ import '../config/api_config.dart';
 import 'auth_service.dart';
 import 'dart:convert';
 import 'dart:math'; // Pour min()
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 class VideoService {
   final _authService = AuthService();
 
@@ -274,80 +277,42 @@ class VideoService {
       return {'success': false, 'message': 'Erreur: $e'};
     }
   }
-
   Future<Map<String, dynamic>> getFavorites() async {
     try {
       final token = await _authService.getToken();
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/videos/favorites'),
+        Uri.parse('${ApiConfig.baseUrl}/api/videos/my-favorites'),
         headers: {
           'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json; charset=utf-8',
+          'Accept': 'application/json', // Très important
         },
       );
 
-      print('📡 Status Code: ${response.statusCode}');
-      print('📡 Headers: ${response.headers}');
-      print('📡 Body length: ${response.body.length}');
-      print('📡 Body bytes length: ${response.bodyBytes.length}');
+      print('Status: ${response.statusCode}');
+      print('Content-Type: ${response.headers['content-type']}');
+      print('Body length: ${response.bodyBytes.length}');
+
+      // Vérification robuste du Content-Type
+      final contentType = response.headers['content-type'];
+
 
       if (response.statusCode == 200) {
-        // Essayer plusieurs méthodes de décodage
-        try {
-          // MÉTHODE 1 : Directement
-          print('🔧 Tentative 1: json.decode(response.body)');
-          final data1 = json.decode(response.body);
-          print('✅ Méthode 1 réussie');
-          return {
-            'success': true,
-            'videos': (data1 as List).map((v) => Video.fromJson(v)).toList(),
-          };
-        } catch (e1) {
-          print('❌ Méthode 1 échouée: $e1');
+        final decoded = utf8.decode(response.bodyBytes, allowMalformed: false);
+        final List<dynamic> list = json.decode(decoded);
 
-          try {
-            // MÉTHODE 2 : UTF-8 decode
-            print('🔧 Tentative 2: utf8.decode + json.decode');
-            final decoded = utf8.decode(response.bodyBytes);
-            print('📝 Decoded string: ${decoded.substring(0, min(200, decoded.length))}');
-            final data2 = json.decode(decoded);
-            print('✅ Méthode 2 réussie');
-            return {
-              'success': true,
-              'videos': (data2 as List).map((v) => Video.fromJson(v)).toList(),
-            };
-          } catch (e2) {
-            print('❌ Méthode 2 échouée: $e2');
-
-            try {
-              // MÉTHODE 3 : Latin1 puis UTF-8
-              print('🔧 Tentative 3: latin1.decode + utf8.decode');
-              final latin = latin1.decode(response.bodyBytes);
-              final data3 = json.decode(latin);
-              print('✅ Méthode 3 réussie');
-              return {
-                'success': true,
-                'videos': (data3 as List).map((v) => Video.fromJson(v)).toList(),
-              };
-            } catch (e3) {
-              print('❌ Méthode 3 échouée: $e3');
-
-              // Afficher les premiers bytes pour analyse
-              print('📍 Premiers bytes: ${response.bodyBytes.take(100).toList()}');
-
-              return {'success': false, 'message': 'Erreur décodage: $e3'};
-            }
-          }
-        }
+        return {
+          'success': true,
+          'videos': list.map((v) => Video.fromJson(v)).toList(),
+        };
       }
-      return {'success': false, 'message': 'Erreur ${response.statusCode}'};
-    } catch (e, stackTrace) {
-      print('❌ Erreur getFavorites: $e');
-      print('📍 Stack trace: $stackTrace');
-      return {'success': false, 'message': 'Erreur: $e'};
+
+      return {'success': false, 'message': 'Erreur HTTP ${response.statusCode}'};
+    } catch (e, stack) {
+      print('Exception dans getFavorites: $e');
+      print(stack);
+      return {'success': false, 'message': 'Exception: $e'};
     }
   }
-
   Future<Map<String, dynamic>> getRecentVideos() async {
     try {
       final token = await _authService.getToken();
@@ -520,4 +485,49 @@ class VideoService {
       };
     }
   }
+  // ========== PLAYLISTS ==========
+
+  /// Créer une playlist
+  Future<Map<String, dynamic>> createPlaylist({
+    required String title,
+    String? description,
+    required String category,
+    String? difficulty,
+    bool? isPublic,
+  }) async {
+    try {
+      final token = await _authService.getToken();
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/api/videos/playlists'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'title': title,
+          'description': description,
+          'category': category,
+          'difficulty': difficulty ?? 'Moyen',
+          'isPublic': isPublic ?? false,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        return {
+          'success': true,
+          'playlist': VideoPlaylist.fromJson(data),  // Assure-toi d'avoir le model VideoPlaylist
+        };
+      }
+      return {'success': false, 'message': 'Erreur lors de la création'};
+    } catch (e) {
+      return {'success': false, 'message': 'Erreur: $e'};
+    }
+  }
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
+
+
 }

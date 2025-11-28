@@ -31,14 +31,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
     try {
       final result = await _videoService.getFavorites();
 
-      print('📦 Result getFavorites: $result'); // Debug
-
       if (result['success'] && mounted) {
-        final videos = result['videos'];
-        print('📹 Videos reçues: ${videos?.length ?? 0}'); // Debug
-
         setState(() {
-          _favorites = (videos as List?)?.cast<Video>() ?? [];
+          _favorites = (result['videos'] as List?)?.cast<Video>() ?? [];
           _isLoading = false;
         });
       } else {

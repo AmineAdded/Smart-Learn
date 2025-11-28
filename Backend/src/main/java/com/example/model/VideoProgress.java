@@ -51,10 +51,9 @@ public class VideoProgress {
     @Builder.Default
     private Integer watchCount = 1;
     
-    // ✅ CORRECTION : Initialiser lastWatchedAt
+    // ✅ CORRECTION CRITIQUE : Pas de @Builder.Default ici !
     @Column(name = "last_watched_at", nullable = false)
-    @Builder.Default
-    private LocalDateTime lastWatchedAt = LocalDateTime.now();
+    private LocalDateTime lastWatchedAt;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -94,16 +93,15 @@ public class VideoProgress {
     }
     
     /**
-     * ✅ Initialisation automatique avant sauvegarde
+     * ✅ CORRECTION : Initialisation automatique AVANT sauvegarde
      */
     @PrePersist
     protected void onCreate() {
+        // Initialiser lastWatchedAt si null
         if (this.lastWatchedAt == null) {
             this.lastWatchedAt = LocalDateTime.now();
         }
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        // CreatedAt est géré par @CreationTimestamp
     }
     
     /**
@@ -111,8 +109,9 @@ public class VideoProgress {
      */
     @PreUpdate
     protected void onUpdate() {
+        // Toujours mettre à jour lastWatchedAt lors d'une modification
         this.lastWatchedAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        // UpdatedAt est géré par @UpdateTimestamp
     }
     
     /**

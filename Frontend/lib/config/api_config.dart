@@ -1,7 +1,7 @@
 class ApiConfig {
   // URL de base de votre API
   // Remplacez cette URL par celle de votre tunnel Cloudflare
-  static const String baseUrl = 'https://controlling-seo-election-links.trycloudflare.com';
+  static const String baseUrl = 'https://accommodations-thomson-composed-aye.trycloudflare.com';
 
   // Timeout pour les requêtes HTTP (en secondes)
   static const int timeoutSeconds = 30;

@@ -32,7 +32,7 @@ public class KhanAcademyService {
     private static final Map<String, List<VideoData>> KHAN_VIDEOS_DATABASE = new HashMap<>();
 
     static {
-        // ========== MATHÉMATIQUES (25 vidéos) ==========
+        // ========== MATHÉMATIQUES (14 vidéos) ==========
         KHAN_VIDEOS_DATABASE.put("Mathématiques", Arrays.asList(
             new VideoData("hSbHGvQO8Ts", "Équations du premier degré", "Résoudre des équations simples", 600, "Moyen"),
             new VideoData("KUhdMbx5ges", "Géométrie: les triangles", "Propriétés des triangles", 510, "Facile"),
@@ -50,7 +50,7 @@ public class KhanAcademyService {
             new VideoData("FWRmCM_QMvA", "Introduction aux dérivées", "Calcul différentiel", 900, "Difficile")
         ));
 
-        // ========== PHYSIQUE (20 vidéos) ==========
+        // ========== PHYSIQUE (14 vidéos) ==========
         KHAN_VIDEOS_DATABASE.put("Physique", Arrays.asList(
             new VideoData("PIpnGilqefE", "La gravitation universelle", "Force de gravité", 960, "Moyen"),
             new VideoData("gBiF-OLUVTY", "Les états de la matière", "Solide, liquide, gaz", 450, "Facile"),
@@ -68,7 +68,7 @@ public class KhanAcademyService {
             new VideoData("J7NvjYFpw5c", "Introduction à la relativité", "Concepts relativistes", 900, "Difficile")
         ));
 
-        // ========== CHIMIE (20 vidéos) ==========
+        // ========== CHIMIE (13 vidéos) ==========
         KHAN_VIDEOS_DATABASE.put("Chimie", Arrays.asList(
             new VideoData("MK3tCKaMEL8", "Introduction à la chimie", "Bases de la chimie", 480, "Moyen"),
             new VideoData("pX4-wbNMLcs", "Les atomes", "Structure atomique", 540, "Facile"),
@@ -85,7 +85,7 @@ public class KhanAcademyService {
             new VideoData("nDV5yWfHKko", "La chimie organique", "Hydrocarbures", 900, "Difficile")
         ));
 
-        // ========== BIOLOGIE (20 vidéos) ==========
+        // ========== BIOLOGIE (16 vidéos) ==========
         KHAN_VIDEOS_DATABASE.put("Biologie", Arrays.asList(
             new VideoData("Hmwvj9X4GNY", "La cellule: unité du vivant", "Structure cellulaire", 390, "Facile"),
             new VideoData("AmOO4j0E408", "L'ADN", "Acide désoxyribonucléique", 660, "Moyen"),
@@ -143,7 +143,7 @@ public class KhanAcademyService {
             new VideoData("pVPUc_0l700", "TOEFL Preparation", "Test preparation", 960, "Difficile")
         ));
 
-        // ========== INFORMATIQUE (15 vidéos) ==========
+        // ========== INFORMATIQUE (16 vidéos) ==========
         KHAN_VIDEOS_DATABASE.put("Informatique", Arrays.asList(
 
             new VideoData("zOjov-2OZ0E", "Introduction à la programmation", "Concepts de base", 720, "Facile"),

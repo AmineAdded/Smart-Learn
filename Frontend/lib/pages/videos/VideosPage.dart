@@ -92,7 +92,6 @@ class _VideosPageState extends State<VideosPage>
     }
   }
 
-  // ✅ CORRECTION : Charger les favoris dans l'onglet au lieu de rediriger
   Future<void> _handleTabChange(int index) async {
     setState(() {
       _isLoading = true;
@@ -126,7 +125,7 @@ class _VideosPageState extends State<VideosPage>
         }
         return;
 
-      case 3: // ✅ FAVORIS : Charger dans l'onglet
+      case 3: // Favoris
         final result = await _videoService.getFavorites();
         if (result['success'] && mounted) {
           setState(() {
@@ -266,8 +265,7 @@ class _VideosPageState extends State<VideosPage>
           height: MediaQuery.of(context).size.height * 0.7,
           decoration: BoxDecoration(
             color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,16 +273,14 @@ class _VideosPageState extends State<VideosPage>
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  border:
-                  Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                  border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
                       'Filtres',
-                      style:
-                      TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     TextButton(
                       onPressed: () {
@@ -307,8 +303,7 @@ class _VideosPageState extends State<VideosPage>
                     children: [
                       const Text(
                         'Catégorie',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 12),
                       Wrap(
@@ -327,9 +322,6 @@ class _VideosPageState extends State<VideosPage>
                           );
                         }).toList(),
                       ),
-
-
-
                     ],
                   ),
                 ),
@@ -363,8 +355,7 @@ class _VideosPageState extends State<VideosPage>
                     ),
                     child: const Text(
                       'Appliquer les filtres',
-                      style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -465,8 +456,14 @@ class _VideosPageState extends State<VideosPage>
           },
         ),
       ),
-      floatingActionButton: _videos.isEmpty && !_isLoading
-          ? FloatingActionButton.extended(
+      floatingActionButton: _buildFloatingButton(),
+    );
+  }
+
+  Widget? _buildFloatingButton() {
+    // Bouton charger vidéos si vide
+    if (_videos.isEmpty && !_isLoading) {
+      return FloatingActionButton.extended(
         onPressed: _isInitializing ? null : _initializeVideos,
         icon: _isInitializing
             ? const SizedBox(
@@ -478,42 +475,31 @@ class _VideosPageState extends State<VideosPage>
           ),
         )
             : const Icon(Icons.download),
-        label:
-        Text(_isInitializing ? 'Chargement...' : 'Charger vidéos'),
+        label: Text(_isInitializing ? 'Chargement...' : 'Charger vidéos'),
         backgroundColor: const Color(0xFF6C5CE7),
-      )
-          : null,
-    );
+      );
+    }
+
+    return null;
   }
 
   Widget _buildEmptyState() {
-    // ✅ Message différent pour l'onglet Favoris
     if (_tabController.index == 3) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.favorite_border,
-              size: 80,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.favorite_border, size: 80, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               'Aucune vidéo favorite',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey.shade700),
             ),
             const SizedBox(height: 8),
             Text(
               'Ajoutez des vidéos à vos favoris\npour les retrouver facilement',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -524,8 +510,7 @@ class _VideosPageState extends State<VideosPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.video_library_outlined,
-              size: 64, color: Colors.grey.shade400),
+          Icon(Icons.video_library_outlined, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
             'Aucune vidéo trouvée',
@@ -550,9 +535,7 @@ class _VideosPageState extends State<VideosPage>
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => VideoPlayerPage(video: video),
-            ),
+            MaterialPageRoute(builder: (_) => VideoPlayerPage(video: video)),
           ).then((_) => _handleTabChange(_tabController.index));
         },
         borderRadius: BorderRadius.circular(12),
@@ -562,8 +545,7 @@ class _VideosPageState extends State<VideosPage>
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                   child: Image.network(
                     video.thumbnailUrl,
                     width: double.infinity,
@@ -580,8 +562,7 @@ class _VideosPageState extends State<VideosPage>
                   right: 8,
                   bottom: 8,
                   child: Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.black87,
                       borderRadius: BorderRadius.circular(4),
@@ -600,8 +581,7 @@ class _VideosPageState extends State<VideosPage>
                     child: LinearProgressIndicator(
                       value: video.progressPercentage / 100,
                       backgroundColor: Colors.transparent,
-                      valueColor:
-                      const AlwaysStoppedAnimation(Color(0xFF6C5CE7)),
+                      valueColor: const AlwaysStoppedAnimation(Color(0xFF6C5CE7)),
                       minHeight: 4,
                     ),
                   ),
@@ -617,20 +597,14 @@ class _VideosPageState extends State<VideosPage>
                       Expanded(
                         child: Text(
                           video.title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // ✅ CORRECTION TOGGLE FAVORITE
                       IconButton(
                         icon: Icon(
-                          video.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
+                          video.isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: video.isFavorite ? Colors.red : Colors.grey,
                         ),
                         onPressed: () async {
@@ -641,8 +615,7 @@ class _VideosPageState extends State<VideosPage>
                             _videos[index] = video.copyWith(isFavorite: newStatus);
                           });
 
-                          final result = await _videoService.toggleFavorite(
-                              video.id, oldStatus);
+                          final result = await _videoService.toggleFavorite(video.id, oldStatus);
 
                           if (result['success']) {
                             if (newStatus && result['hasXp'] == true && mounted) {
@@ -651,26 +624,18 @@ class _VideosPageState extends State<VideosPage>
                                 SnackBar(
                                   content: Row(
                                     children: [
-                                      const Icon(Icons.star,
-                                          color: Colors.white, size: 20),
+                                      const Icon(Icons.star, color: Colors.white, size: 20),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
                                               '+${xpResponse.xpAdded} XP',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                              ),
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                             ),
-                                            const Text(
-                                              'Ajouté aux favoris',
-                                              style: TextStyle(fontSize: 12),
-                                            ),
+                                            const Text('Ajouté aux favoris', style: TextStyle(fontSize: 12)),
                                           ],
                                         ),
                                       ),
@@ -679,8 +644,7 @@ class _VideosPageState extends State<VideosPage>
                                   backgroundColor: const Color(0xFF6C5CE7),
                                   duration: const Duration(seconds: 3),
                                   behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ),
                               );
                             }
@@ -705,21 +669,18 @@ class _VideosPageState extends State<VideosPage>
                   const SizedBox(height: 4),
                   Text(
                     video.channelTitle,
-                    style:
-                    TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       _buildChip(video.category, Colors.blue),
                       const SizedBox(width: 8),
-                      _buildChip(video.difficulty,
-                          _getDifficultyColor(video.difficulty)),
+                      _buildChip(video.difficulty, _getDifficultyColor(video.difficulty)),
                       const Spacer(),
                       Text(
                         '${video.viewCount} vues',
-                        style: TextStyle(
-                            color: Colors.grey.shade600, fontSize: 12),
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                       ),
                     ],
                   ),
@@ -741,8 +702,7 @@ class _VideosPageState extends State<VideosPage>
       ),
       child: Text(
         label,
-        style: TextStyle(
-            color: color, fontSize: 12, fontWeight: FontWeight.w500),
+        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500),
       ),
     );
   }

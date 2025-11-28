@@ -6,6 +6,7 @@ import '../../models/add_xp_response.dart';
 import '../../services/video_service.dart';
 import 'dart:async';
 
+
 class VideoPlayerPage extends StatefulWidget {
   final Video video;
 
@@ -25,7 +26,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with TickerProviderSt
   bool _isLoadingNotes = false;
   final _noteController = TextEditingController();
   bool _isFavorite = false;
-  bool _hasShownCompletionDialog = false; // 🆕 Pour éviter les doublons
+  bool _hasShownCompletionDialog = false;
 
   @override
   void initState() {
@@ -392,16 +393,14 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with TickerProviderSt
                                       ),
                                     ),
                                   ),
+
+                                  // CŒUR (favori)
                                   IconButton(
                                     icon: Icon(
                                       _isFavorite ? Icons.favorite : Icons.favorite_border,
-                                      color: _isFavorite ? Colors.red : Colors.grey,
+                                      color: _isFavorite ? Colors.red : Colors.grey.shade600,
                                     ),
                                     onPressed: _toggleFavorite,
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.share),
-                                    onPressed: () {},
                                   ),
                                 ],
                               ),
