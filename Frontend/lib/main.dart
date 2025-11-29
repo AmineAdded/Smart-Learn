@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:smart_learn/pages/quizzes/QuizzesPage.dart';
 import '../l10n/app_localizations.dart';
 
 import 'providers/theme_provide.dart';
@@ -71,6 +72,8 @@ class MyApp extends StatelessWidget {
         '/progression': (_) => const ProgressionPage(),
         '/settings': (_) => const SettingsPage(),
         '/interests-selection': (_) => const InterestsSelectionScreen(isOnboarding: false),
+        '/quizzes': (_) => const QuizzesPage(),
+
       },
 
       onGenerateRoute: (settings) {

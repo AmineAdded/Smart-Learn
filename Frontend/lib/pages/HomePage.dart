@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_learn/pages/quizzes/QuizzesPage.dart';
 import '../services/auth_service.dart';
 import 'home/home_stat_cards.dart';
 import 'home/home_content_widgets.dart';
@@ -60,9 +61,12 @@ class _HomePageState extends State<HomePage> {
       case 0:
         break;
       case 1:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.quizzesInDevelopment)),
-        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const QuizzesPage()),
+        ).then((_) {
+          setState(() => _currentNavIndex = 0);
+        });
         break;
       case 2:
         Navigator.push(
