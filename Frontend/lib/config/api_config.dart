@@ -1,7 +1,7 @@
 class ApiConfig {
   // URL de base de votre API
   // Remplacez cette URL par celle de votre tunnel Cloudflare
-  static const String baseUrl = 'https://macie-unprognosticative-kylan.ngrok-free.dev';
+  static const String baseUrl = 'https://satisfaction-surprised-persons-poor.trycloudflare.com';
 
   // Timeout pour les requêtes HTTP (en secondes)
   static const int timeoutSeconds = 30;
