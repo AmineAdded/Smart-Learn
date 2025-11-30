@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/quiz_service.dart';
 import '../../models/quiz_detail_model.dart';
+import 'QuizPlayPage.dart';
+
 
 class QuizDetailPage extends StatefulWidget {
   final int quizId;
@@ -62,14 +64,50 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     }
   }
 
-  void _startQuiz() {
-    // TODO: Navigation vers la page de quiz en cours
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Démarrage du quiz...'),
-        backgroundColor: Color(0xFF00B894),
+  void _startQuiz() async {
+    // Vérifier si une session est en cours
+    if (_quizDetail!.userProgress.progressStatus == 'in_progress') {
+      final shouldResume = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Reprendre le quiz ?'),
+          content: const Text(
+            'Vous avez une session en cours. Voulez-vous la reprendre ou recommencer ?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Recommencer'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF5B9FD8),
+              ),
+              child: const Text('Reprendre'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldResume == null) return;
+
+      if (!shouldResume) {
+        // Supprimer l'ancienne session (appeler l'API de suppression)
+        // Pour l'instant, on crée juste une nouvelle session
+      }
+    }
+
+    // Navigation vers la page de quiz en cours
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizPlayPage(quizId: widget.quizId),
       ),
-    );
+    ).then((_) {
+      // Recharger les détails après le quiz
+      _loadQuizDetail();
+    });
   }
 
   @override
