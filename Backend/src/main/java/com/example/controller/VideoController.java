@@ -26,6 +26,9 @@ import org.springframework.web.bind.annotation.*;
 import com.example.service.KhanAcademyService;
 import com.example.repository.VideoRepository;
 import jakarta.validation.Valid;
+
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -82,7 +85,62 @@ private KhanAcademyService khanAcademyService;
         }
     }
 
+/**
+ * POST /api/videos/init-sample - Charger 8 vidéos d'exemple
+ */
+@PostMapping("/init-sample")
+@Operation(summary = "Initialiser vidéos d'exemple")
+public ResponseEntity<MessageResponse> initializeSampleVideos() {
+    try {
+        // Catégories pour les 8 vidéos
+        List<String> categories = Arrays.asList(
+            "Mathématiques", "Physique", "Chimie", "Biologie",
+            "Français", "Anglais", "Informatique", "Histoire"
+        );
+        
+        int imported = 0;
+        for (String category : categories) {
+            List<Video> videos = khanAcademyService.searchVideosByCategory(category, 1);
+            imported += videos.size();
+        }
+        
+        return ResponseEntity.ok(
+            new MessageResponse(imported + " vidéos d'exemple importées avec succès")
+        );
+    } catch (Exception e) {
+        log.error("❌ Erreur init-sample", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(new MessageResponse("Erreur: " + e.getMessage()));
+    }
+}
 
+/**
+ * POST /api/videos/init-khan - Importer TOUTES les vidéos Khan Academy
+ */
+@PostMapping("/init-khan")
+@Operation(summary = "Importer Khan Academy")
+public ResponseEntity<Map<String, Object>> initializeKhanVideos() {
+    try {
+        log.info("🚀 Démarrage import Khan Academy COMPLET");
+        
+        Map<String, Integer> results = khanAcademyService.importAllCategories();
+        
+        int total = results.values().stream().mapToInt(Integer::intValue).sum();
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", total + " vidéos Khan Academy importées");
+        response.put("details", results);
+        response.put("total", total);
+        
+        return ResponseEntity.ok(response);
+        
+    } catch (Exception e) {
+        log.error("❌ Erreur init-khan", e);
+        Map<String, Object> error = new HashMap<>();
+        error.put("message", "Erreur import Khan: " + e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+}
 
 /**
  * GET /api/videos/khan/stats - Statistiques Khan Academy

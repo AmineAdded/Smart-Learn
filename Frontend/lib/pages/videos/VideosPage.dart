@@ -161,10 +161,6 @@ class _VideosPageState extends State<VideosPage>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, 'sample'),
-            child: const Text('Vidéos d\'exemple (8 vidéos)'),
-          ),
-          TextButton(
             onPressed: () => Navigator.pop(context, 'khan'),
             child: const Text('Khan Academy (100 vidéos)'),
           ),
@@ -462,7 +458,7 @@ class _VideosPageState extends State<VideosPage>
 
   Widget? _buildFloatingButton() {
     // Bouton charger vidéos si vide
-    if (_videos.isEmpty && !_isLoading) {
+    if (_videos.isEmpty) {
       return FloatingActionButton.extended(
         onPressed: _isInitializing ? null : _initializeVideos,
         icon: _isInitializing
