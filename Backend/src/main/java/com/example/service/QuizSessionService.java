@@ -272,6 +272,29 @@ public class QuizSessionService {
             scorePercentage = (int) ((session.getCurrentScore() * 100.0) / session.getTotalPointsPossible());
         }
 
+        // Compter les réponses correctes
+        List<UserAnswer> userAnswers = userAnswerRepository.findBySessionId(sessionId);
+        long correctAnswersCount = userAnswers.stream()
+                .filter(ua -> ua.getIsCorrect() != null && ua.getIsCorrect())
+                .count();
+
+        long totalQuestions = questionRepository.countByQuizId(session.getQuiz().getId());
+
+        // Déterminer si le quiz est réussi (>= 50%)
+        boolean passed = scorePercentage >= 50;
+
+        // Calculer les XP gagnés
+        int xpEarned = session.getQuiz().getXpReward() != null ? session.getQuiz().getXpReward() : 0;
+        if (passed) {
+            // Bonus si parfait
+            if (scorePercentage == 100) {
+                xpEarned = (int) (xpEarned * 1.5);
+            }
+        } else {
+            // Réduction si échoué
+            xpEarned = xpEarned / 2;
+        }
+
         // Créer le résultat du quiz
         QuizResult result = QuizResult.builder()
                 .user(session.getUser())
@@ -279,8 +302,14 @@ public class QuizSessionService {
                 .score(scorePercentage)
                 .timeSpentMinutes((int) Math.ceil(session.getTimeSpentSeconds() / 60.0))
                 .completedAt(LocalDateTime.now())
+                .correctAnswers((int) correctAnswersCount)
+                .totalQuestions((int) totalQuestions)
+                .passed(passed)
+                .xpEarned(xpEarned)
+                .earnedPoints(session.getCurrentScore())
                 .build();
 
+        System.out.println("✅ Résultat final - Score: " + scorePercentage + "%, Réussi: " + passed + ", XP: " + xpEarned);
         return quizResultRepository.save(result);
     }
 

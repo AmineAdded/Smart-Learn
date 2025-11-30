@@ -36,9 +36,16 @@ class QuizSessionService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
+        // ⭐ Debug : afficher les données reçues
+        print('📦 Data reçue: ${data.toString()}');
+        print('📊 Nombre de questions: ${(data['questions'] as List?)?.length ?? 0}');
+
         final session = QuizSessionModel.fromJson(data);
 
         print('✅ Session créée: #${session.sessionId}');
+        print('✅ Questions dans le model: ${session.questions.length}');
+
         return {
           'success': true,
           'data': session,
@@ -161,6 +168,7 @@ class QuizSessionService {
       );
 
       print('🔵 Status Code: ${response.statusCode}');
+      print('🔵 Response Body: ${response.body}'); // ⭐ Ajout du log
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -172,13 +180,15 @@ class QuizSessionService {
         };
       } else {
         final error = jsonDecode(response.body);
+        print('❌ Erreur backend: ${error.toString()}'); // ⭐ Log détaillé
         return {
           'success': false,
           'message': error['message'] ?? 'Erreur de finalisation',
         };
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ Exception: $e');
+      print('Stack trace: $stackTrace');
       return {
         'success': false,
         'message': 'Erreur de connexion: $e',
