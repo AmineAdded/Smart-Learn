@@ -36,18 +36,6 @@ public class QuizResult {
 
     @Column(name = "time_spent_minutes")
     private Integer timeSpentMinutes;
-    @Column(name = "xp_earned", nullable = false)
-    private Integer xpEarned;
-    @Column(name = "passed", nullable = false)
-    private Boolean passed;
-    @Column(name = "correct_answers", nullable = false)
-    private Integer correctAnswers;
-
-    @Column(name = "total_questions", nullable = false)
-    private Integer totalQuestions;
-
-
-
 
     @Column(name = "completed_at", nullable = false)
     private LocalDateTime completedAt;
@@ -55,11 +43,42 @@ public class QuizResult {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    // ⭐ Colonnes supplémentaires pour correspondre à votre base de données
+    @Column(name = "correct_answers")
+    private Integer correctAnswers = 0;
+
+    @Column(name = "total_questions")
+    private Integer totalQuestions = 0;
+
+    @Column(name = "passed")
+    private Boolean passed = false;
+
+    @Column(name = "xp_earned")
+    private Integer xpEarned = 0;
+
+    @Column(name = "earned_points")
+    private Integer earnedPoints = 0;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         if (completedAt == null) {
             completedAt = LocalDateTime.now();
+        }
+        if (correctAnswers == null) {
+            correctAnswers = 0;
+        }
+        if (totalQuestions == null) {
+            totalQuestions = 0;
+        }
+        if (passed == null) {
+            passed = false;
+        }
+        if (xpEarned == null) {
+            xpEarned = 0;
+        }
+        if (earnedPoints == null) {
+            earnedPoints = 0;
         }
     }
 }
