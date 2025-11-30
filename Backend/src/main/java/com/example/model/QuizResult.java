@@ -5,10 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * Représente le résultat final d'un quiz terminé
+ */
 @Entity
 @Table(name = "quiz_results")
 @Data
@@ -21,47 +23,43 @@ public class QuizResult {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id", nullable = false)
     private Quiz quiz;
 
-    @Column(nullable = false)
-    private Integer score;
+    @Column(name = "score", nullable = false)
+    private Integer score; // Pourcentage (0-100)
 
-    @Column(nullable = false)
-    private Integer totalQuestions;
-
-    @Column(nullable = false)
+    @Column(name = "time_spent_minutes")
+    private Integer timeSpentMinutes;
+    @Column(name = "xp_earned", nullable = false)
+    private Integer xpEarned;
+    @Column(name = "passed", nullable = false)
+    private Boolean passed;
+    @Column(name = "correct_answers", nullable = false)
     private Integer correctAnswers;
 
-    @Column(nullable = false)
-    private Integer timeSpentMinutes;
+    @Column(name = "total_questions", nullable = false)
+    private Integer totalQuestions;
 
-    @Column(nullable = false)
-    private Integer xpEarned;
 
-    @Column(nullable = false)
-    private Boolean passed;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+
+    @Column(name = "completed_at", nullable = false)
     private LocalDateTime completedAt;
 
-    // Méthodes utilitaires
-    public double getSuccessRate() {
-        return (correctAnswers * 100.0) / totalQuestions;
-    }
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    public String getPerformanceLevel() {
-        double rate = getSuccessRate();
-        if (rate >= 90) return "Excellent";
-        if (rate >= 75) return "Très bien";
-        if (rate >= 60) return "Bien";
-        if (rate >= 50) return "Passable";
-        return "Insuffisant";
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        if (completedAt == null) {
+            completedAt = LocalDateTime.now();
+        }
     }
 }
