@@ -254,63 +254,89 @@ public class QuizSessionService {
      */
     @Transactional
     public QuizResult completeQuiz(Long sessionId) {
+        System.out.println("📥 Tentative de complétion du quiz - Session: " + sessionId);
+
         QuizSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session non trouvée"));
 
         if (session.getIsCompleted()) {
-            throw new RuntimeException("Cette session est déjà terminée");
+            System.out.println("⚠️ Session déjà terminée");
+            // Si déjà terminée, retourner le résultat existant
+            return quizResultRepository.findByUserIdAndQuizId(
+                            session.getUser().getId(),
+                            session.getQuiz().getId()
+                    ).stream()
+                    .max((r1, r2) -> r1.getCompletedAt().compareTo(r2.getCompletedAt()))
+                    .orElseThrow(() -> new RuntimeException("Résultat non trouvé"));
         }
 
-        // Marquer la session comme terminée
-        session.setIsCompleted(true);
-        session.setCompletedAt(LocalDateTime.now());
-        sessionRepository.save(session);
+        try {
+            // Compter les réponses correctes
+            List<UserAnswer> userAnswers = userAnswerRepository.findBySessionId(sessionId);
+            long correctAnswersCount = userAnswers.stream()
+                    .filter(ua -> ua.getIsCorrect() != null && ua.getIsCorrect())
+                    .count();
 
-        // Calculer le score en pourcentage
-        int scorePercentage = 0;
-        if (session.getTotalPointsPossible() > 0) {
-            scorePercentage = (int) ((session.getCurrentScore() * 100.0) / session.getTotalPointsPossible());
-        }
+            long totalQuestions = questionRepository.countByQuizId(session.getQuiz().getId());
 
-        // Compter les réponses correctes
-        List<UserAnswer> userAnswers = userAnswerRepository.findBySessionId(sessionId);
-        long correctAnswersCount = userAnswers.stream()
-                .filter(ua -> ua.getIsCorrect() != null && ua.getIsCorrect())
-                .count();
-
-        long totalQuestions = questionRepository.countByQuizId(session.getQuiz().getId());
-
-        // Déterminer si le quiz est réussi (>= 50%)
-        boolean passed = scorePercentage >= 50;
-
-        // Calculer les XP gagnés
-        int xpEarned = session.getQuiz().getXpReward() != null ? session.getQuiz().getXpReward() : 0;
-        if (passed) {
-            // Bonus si parfait
-            if (scorePercentage == 100) {
-                xpEarned = (int) (xpEarned * 1.5);
+            // Calculer le score en pourcentage
+            int scorePercentage = 0;
+            if (session.getTotalPointsPossible() != null && session.getTotalPointsPossible() > 0) {
+                scorePercentage = (int) ((session.getCurrentScore() * 100.0) / session.getTotalPointsPossible());
             }
-        } else {
-            // Réduction si échoué
-            xpEarned = xpEarned / 2;
+
+            // Déterminer si le quiz est réussi (>= 50%)
+            boolean passed = scorePercentage >= 50;
+
+            // Calculer les XP gagnés
+            int xpEarned = session.getQuiz().getXpReward() != null ? session.getQuiz().getXpReward() : 0;
+            if (passed) {
+                // Bonus si parfait
+                if (scorePercentage == 100) {
+                    xpEarned = (int) (xpEarned * 1.5);
+                }
+            } else {
+                // Réduction si échoué
+                xpEarned = xpEarned / 2;
+            }
+
+            System.out.println("📊 Résultats calculés:");
+            System.out.println("  - Score: " + scorePercentage + "%");
+            System.out.println("  - Réponses correctes: " + correctAnswersCount + "/" + totalQuestions);
+            System.out.println("  - Réussi: " + passed);
+            System.out.println("  - XP: " + xpEarned);
+
+            // Marquer la session comme terminée AVANT de créer le résultat
+            session.setIsCompleted(true);
+            session.setCompletedAt(LocalDateTime.now());
+            session = sessionRepository.saveAndFlush(session); // ⭐ Utiliser saveAndFlush pour forcer l'écriture
+
+            System.out.println("✅ Session marquée comme terminée");
+
+            // Créer le résultat du quiz
+            QuizResult result = QuizResult.builder()
+                    .user(session.getUser())
+                    .quiz(session.getQuiz())
+                    .score(scorePercentage)
+                    .timeSpentMinutes((int) Math.ceil(session.getTimeSpentSeconds() / 60.0))
+                    .completedAt(LocalDateTime.now())
+                    .correctAnswers((int) correctAnswersCount)
+                    .totalQuestions((int) totalQuestions)
+                    .passed(passed)
+                    .xpEarned(xpEarned)
+                    .earnedPoints(session.getCurrentScore())
+                    .build();
+
+            result = quizResultRepository.save(result);
+            System.out.println("✅ Résultat sauvegardé - ID: " + result.getId());
+
+            return result;
+
+        } catch (Exception e) {
+            System.err.println("❌ Erreur lors de la complétion du quiz: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Erreur lors de la finalisation du quiz: " + e.getMessage());
         }
-
-        // Créer le résultat du quiz
-        QuizResult result = QuizResult.builder()
-                .user(session.getUser())
-                .quiz(session.getQuiz())
-                .score(scorePercentage)
-                .timeSpentMinutes((int) Math.ceil(session.getTimeSpentSeconds() / 60.0))
-                .completedAt(LocalDateTime.now())
-                .correctAnswers((int) correctAnswersCount)
-                .totalQuestions((int) totalQuestions)
-                .passed(passed)
-                .xpEarned(xpEarned)
-                .earnedPoints(session.getCurrentScore())
-                .build();
-
-        System.out.println("✅ Résultat final - Score: " + scorePercentage + "%, Réussi: " + passed + ", XP: " + xpEarned);
-        return quizResultRepository.save(result);
     }
 
     /**
@@ -447,4 +473,5 @@ public class QuizSessionService {
         } catch (Exception e) {
             return null;
         }
-    }}
+    }
+}

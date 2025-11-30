@@ -274,6 +274,24 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
 
   Widget _buildQuickInfo() {
     final quiz = _quizDetail!;
+
+    // ⭐ Calculer le nombre réel de questions depuis la distribution
+    int totalQuestionsFromDistribution =
+        quiz.questionDistribution.multipleChoice +
+            quiz.questionDistribution.trueFalse +
+            quiz.questionDistribution.shortAnswer +
+            quiz.questionDistribution.matching;
+
+    // ⭐ Utiliser le nombre réel si différent
+    int displayedQuestionCount = quiz.questionCount;
+    if (totalQuestionsFromDistribution > 0 &&
+        totalQuestionsFromDistribution != quiz.questionCount) {
+      print('⚠️ Incohérence détectée:');
+      print('   Quiz indique: ${quiz.questionCount}');
+      print('   Réel: $totalQuestionsFromDistribution');
+      displayedQuestionCount = totalQuestionsFromDistribution;
+    }
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -293,7 +311,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
         children: [
           _buildInfoItem(
             Icons.quiz,
-            '${quiz.questionCount}',
+            '$displayedQuestionCount', // ⭐ Utiliser le nombre corrigé
             'Questions',
           ),
           _buildInfoItem(
