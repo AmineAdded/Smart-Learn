@@ -1,7 +1,7 @@
 class ApiConfig {
   // URL de base de votre API
   // Remplacez cette URL par celle de votre tunnel Cloudflare
-  static const String baseUrl = 'https://satisfaction-surprised-persons-poor.trycloudflare.com';
+  static const String baseUrl = 'https://thousand-stories-skills-conf.trycloudflare.com';
 
   // Timeout pour les requêtes HTTP (en secondes)
   static const int timeoutSeconds = 30;
