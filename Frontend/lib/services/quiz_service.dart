@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/quiz_model.dart';
+import '../models/quiz_detail_model.dart';
 import 'auth_service.dart';
 
 class QuizService {
@@ -31,7 +32,6 @@ class QuizService {
     try {
       print('🔵 Récupération des quiz...');
 
-      // Construire l'URL avec les paramètres
       String url = baseUrl;
       List<String> params = [];
 
@@ -58,7 +58,6 @@ class QuizService {
       );
 
       print('🔵 Status Code: ${response.statusCode}');
-      print('🔵 Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -86,7 +85,7 @@ class QuizService {
     }
   }
 
-  /// GET /api/quizzes/{id} - Récupérer un quiz par son ID
+  /// GET /api/quizzes/{id} - Récupérer un quiz par son ID (version simple)
   Future<Map<String, dynamic>> getQuizById(int id) async {
     try {
       print('🔵 Récupération du quiz #$id...');
@@ -117,6 +116,46 @@ class QuizService {
       }
     } catch (e) {
       print('❌ Exception: $e');
+      return {
+        'success': false,
+        'message': 'Erreur de connexion au serveur: $e',
+      };
+    }
+  }
+
+  /// GET /api/quizzes/{id}/detail - Récupérer les détails complets d'un quiz
+  Future<Map<String, dynamic>> getQuizDetail(int id) async {
+    try {
+      print('🔵 Récupération des détails du quiz #$id...');
+
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/$id/detail'),
+        headers: headers,
+      );
+
+      print('🔵 Status Code: ${response.statusCode}');
+      print('🔵 Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final quizDetail = QuizDetailModel.fromJson(data);
+
+        print('✅ Détails du quiz récupérés: ${quizDetail.title}');
+        return {
+          'success': true,
+          'data': quizDetail,
+        };
+      } else {
+        final error = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': error['message'] ?? 'Quiz non trouvé',
+        };
+      }
+    } catch (e, stackTrace) {
+      print('❌ Exception: $e');
+      print('Stack trace: $stackTrace');
       return {
         'success': false,
         'message': 'Erreur de connexion au serveur: $e',

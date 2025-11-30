@@ -72,4 +72,9 @@ public class User {
         USER,
         ADMIN
     }
+    public String getUsername() {
+        return (nom != null && !nom.isEmpty()) ? nom : "";
+    }
+
+
 }

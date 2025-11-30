@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/quiz_service.dart';
 import '../../models/quiz_model.dart';
-import '../../l10n/app_localizations.dart';
+import 'QuizDetailPage.dart'; // ⭐ Import de la nouvelle page
 
 class QuizzesPage extends StatefulWidget {
   const QuizzesPage({super.key});
@@ -36,13 +36,11 @@ class _QuizzesPageState extends State<QuizzesPage> {
     });
 
     try {
-      // Charger les catégories
       final categoriesResult = await _quizService.getCategories();
       if (categoriesResult['success']) {
         _categories = categoriesResult['data'];
       }
 
-      // Charger les quiz
       await _loadQuizzes();
     } catch (e) {
       setState(() {
@@ -98,18 +96,29 @@ class _QuizzesPageState extends State<QuizzesPage> {
     }
   }
 
+  // ⭐ Nouvelle méthode de navigation vers les détails
+  void _navigateToQuizDetail(QuizModel quiz) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizDetailPage(quizId: quiz.id),
+      ),
+    ).then((_) {
+      // Recharger les quiz si nécessaire après retour
+      _loadQuizzes();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: const Color(0xFF5B9FD8),
         elevation: 0,
-        title: Text(
+        title: const Text(
           'Quiz disponibles',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -206,18 +215,12 @@ class _QuizzesPageState extends State<QuizzesPage> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            // TODO: Naviguer vers les détails du quiz
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Quiz: ${quiz.title}')),
-            );
-          },
+          onTap: () => _navigateToQuizDetail(quiz), // ⭐ Navigation mise à jour
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // En-tête avec badges
                 Row(
                   children: [
                     Expanded(
@@ -262,10 +265,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
                       ),
                   ],
                 ),
-
                 const SizedBox(height: 8),
-
-                // Description
                 if (quiz.description.isNotEmpty)
                   Text(
                     quiz.description,
@@ -276,10 +276,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-
                 const SizedBox(height: 12),
-
-                // Informations
                 Wrap(
                   spacing: 12,
                   runSpacing: 8,
@@ -320,10 +317,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 12),
-
-                // XP et statut
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -444,10 +438,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // Catégorie
               const Text(
                 'Catégorie',
                 style: TextStyle(
@@ -478,10 +469,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
                   setModalState(() => _selectedCategory = value);
                 },
               ),
-
               const SizedBox(height: 16),
-
-              // Difficulté
               const Text(
                 'Difficulté',
                 style: TextStyle(
@@ -512,10 +500,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
                   setModalState(() => _selectedDifficulty = value);
                 },
               ),
-
               const SizedBox(height: 16),
-
-              // IA uniquement
               CheckboxListTile(
                 value: _showOnlyAI,
                 onChanged: (value) {
@@ -525,10 +510,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
                 activeColor: const Color(0xFF5B9FD8),
                 contentPadding: EdgeInsets.zero,
               ),
-
               const SizedBox(height: 24),
-
-              // Bouton appliquer
               SizedBox(
                 width: double.infinity,
                 height: 50,
