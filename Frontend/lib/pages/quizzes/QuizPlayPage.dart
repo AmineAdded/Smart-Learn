@@ -128,17 +128,18 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
   }
 
   void _nextQuestion() {
+    // ⭐ Si c'est la dernière question, terminer immédiatement le quiz
+    if (_isLastQuestion()) {
+      _completeQuiz();
+      return;
+    }
+
     setState(() {
       _showFeedback = false;
       _selectedAnswer = null;
       _currentFeedback = null;
-
-      if (_currentQuestionIndex < _session!.questions.length - 1) {
-        _currentQuestionIndex++;
-        _questionStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      } else {
-        _completeQuiz();  // ⭐ CETTE LIGNE DOIT ÊTRE LÀ
-      }
+      _currentQuestionIndex++;
+      _questionStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     });
   }
 
@@ -222,6 +223,11 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
     final minutes = seconds ~/ 60;
     final secs = seconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  // ⭐ Nouvelle méthode pour vérifier si on est à la dernière question
+  bool _isLastQuestion() {
+    return _currentQuestionIndex >= _session!.questions.length - 1;
   }
 
   @override
@@ -319,7 +325,9 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
         Expanded(
           child: _showFeedback ? _buildFeedback() : _buildQuestion(),
         ),
-        _buildBottomBar(),
+        // ⭐ Condition ajoutée: masquer le BottomBar si on est sur le feedback de la dernière question
+        if (!(_showFeedback && _isLastQuestion()))
+          _buildBottomBar(),
       ],
     );
   }
@@ -818,7 +826,7 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: _showFeedback ? _nextQuestion : _submitAnswer,  // ⭐ VÉRIFIEZ CETTE LIGNE
+            onPressed: _showFeedback ? _nextQuestion : _submitAnswer,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5B9FD8),
               shape: RoundedRectangleBorder(
@@ -827,9 +835,7 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
             ),
             child: Text(
               _showFeedback
-                  ? (_currentQuestionIndex < _session!.questions.length - 1
                   ? 'Question suivante'
-                  : 'Terminer le quiz')  // ⭐ Ce texte doit apparaître
                   : 'Valider',
               style: const TextStyle(
                 fontSize: 18,
