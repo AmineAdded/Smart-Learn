@@ -66,6 +66,7 @@ class _HomePageState extends State<HomePage> {
           MaterialPageRoute(builder: (_) => const QuizzesPage()),
         ).then((_) {
           setState(() => _currentNavIndex = 0);
+          _loadAllData();
         });
         break;
       case 2:
@@ -79,9 +80,13 @@ class _HomePageState extends State<HomePage> {
         break;
 
       case 3:
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressionPage()))
-            .then((_) => setState(() => _currentNavIndex = 0));
-        break;
+        Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProgressionPage())
+        ).then((_) {
+          setState(() => _currentNavIndex = 0);
+          _loadAllData();
+        });
       case 4:
         Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage()))
             .then((_) => setState(() => _currentNavIndex = 0));

@@ -36,6 +36,8 @@ public class QuizSessionService {
     @Autowired
     private QuizResultRepository quizResultRepository;
 
+    @Autowired
+    private ProgressService progressService;
     /**
      * Démarrer une nouvelle session de quiz
      */
@@ -328,8 +330,9 @@ public class QuizSessionService {
                     .build();
 
             result = quizResultRepository.save(result);
+            progressService.updateProgressAfterQuiz(result);
             System.out.println("✅ Résultat sauvegardé - ID: " + result.getId());
-
+           
             return result;
 
         } catch (Exception e) {

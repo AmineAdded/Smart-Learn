@@ -44,6 +44,8 @@ private final VideoFavoriteRepository favoriteRepository;     // ← maintenant 
 
     @Autowired
     private ProgressService progressService;
+    @Autowired
+    private UserProgressRepository userProgressRepository;
 
 
     // 🎯 CONSTANTES XP
@@ -251,7 +253,20 @@ public VideoProgressResponse updateProgress(Long videoId, VideoProgressRequest r
     try {
         VideoProgress savedProgress = progressRepository.save(progress);
         log.info("✅ ✅ ✅ PROGRESSION SAUVEGARDÉE - ID: {}", savedProgress.getId());
+        UserProgress userProgress = progressService.getOrCreateUserProgress(user);
+    // Si vidéo complétée pour la première fois, incrémenter le compteur
+    if ((autoCompleted || (request.getCompleted() != null && request.getCompleted())) && !wasCompleted) {
+        userProgress.setVideosWatched(userProgress.getVideosWatched() + 1);
         
+        // Ajouter le temps de visionnage (en minutes)
+        int watchTimeMinutes = video.getDuration() / 60;
+        userProgress.setTotalStudyTimeMinutes(
+            userProgress.getTotalStudyTimeMinutes() + watchTimeMinutes
+        );
+        
+        progressService.updateStreak(userProgress);
+        userProgressRepository.save(userProgress);
+    }
         // ✅ Vérifier immédiatement en base
         VideoProgress verif = progressRepository.findById(savedProgress.getId()).orElse(null);
         if (verif != null) {
