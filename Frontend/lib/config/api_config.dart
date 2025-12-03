@@ -3,7 +3,7 @@ class ApiConfig {
   // Remplacez cette URL par celle de votre tunnel Cloudflare
 
 
-  static const String baseUrl = 'https://corp-negotiation-gnu-limited.trycloudflare.com';
+  static const String baseUrl = 'https://valid-sport-relay-luther.trycloudflare.com';
 
 
 

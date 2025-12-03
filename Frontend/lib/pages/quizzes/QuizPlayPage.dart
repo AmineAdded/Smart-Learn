@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../services/quiz_session_service.dart';
 import '../../models/quiz_session_model.dart';
+import 'QuizResultPage.dart';
 
 class QuizPlayPage extends StatefulWidget {
   final int quizId;
@@ -136,7 +137,7 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
         _currentQuestionIndex++;
         _questionStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       } else {
-        _completeQuiz();
+        _completeQuiz();  // ⭐ CETTE LIGNE DOIT ÊTRE LÀ
       }
     });
   }
@@ -144,22 +145,77 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
   Future<void> _completeQuiz() async {
     _timer?.cancel();
 
+    print('========================================');
+    print('🔵 DÉBUT DE LA COMPLÉTION DU QUIZ');
+    print('========================================');
+
     final result = await _sessionService.completeQuiz(_session!.sessionId);
 
+    print('📦 Résultat complet: $result');
+    print('✅ Success: ${result['success']}');
+
     if (result['success']) {
+      final quizResultData = result['data'];
+
+      print('📊 Données du quiz reçues:');
+      print('   - Score: ${quizResultData['score']}');
+      print('   - Réponses correctes: ${quizResultData['correctAnswers']}');
+      print('   - Total questions: ${quizResultData['totalQuestions']}');
+
+      // Préparer les données pour QuizResultPage
+      final resultPageData = {
+        'score': quizResultData['score'] ?? 0,
+        'correctAnswers': quizResultData['correctAnswers'] ?? 0,
+        'totalQuestions': quizResultData['totalQuestions'] ?? 0,
+        'passed': quizResultData['passed'] ?? false,
+        'xpEarned': quizResultData['xpEarned'] ?? 0,
+        'timeSpentMinutes': quizResultData['timeSpentMinutes'] ?? 0,
+        'earnedPoints': quizResultData['earnedPoints'] ?? 0,
+        'quiz': {
+          'title': _session!.quizTitle,
+          'difficulty': 'Moyen',
+        },
+      };
+
+      print('🚀 TENTATIVE DE NAVIGATION vers QuizResultPage');
+      print('   Mounted: $mounted');
+
       // Navigation vers la page de résultats
       if (mounted) {
-        Navigator.pushReplacementNamed(
-          context,
-          '/quiz-results',
-          arguments: result['data'],
-        );
+        try {
+          print('✅ Navigation en cours...');
+          await Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                print('🎯 Builder de QuizResultPage appelé');
+                return QuizResultPage(result: resultPageData);
+              },
+            ),
+          );
+          print('✅ Navigation terminée avec succès');
+        } catch (e) {
+          print('❌ ERREUR lors de la navigation: $e');
+        }
+      } else {
+        print('❌ Widget non mounted, navigation annulée');
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'])),
-      );
+      print('❌ Erreur: ${result['message']}');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Erreur lors de la finalisation'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
+
+    print('========================================');
+    print('🔵 FIN DE LA COMPLÉTION DU QUIZ');
+    print('========================================');
   }
 
   String _formatTime(int seconds) {
@@ -762,7 +818,7 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: _showFeedback ? _nextQuestion : _submitAnswer,
+            onPressed: _showFeedback ? _nextQuestion : _submitAnswer,  // ⭐ VÉRIFIEZ CETTE LIGNE
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5B9FD8),
               shape: RoundedRectangleBorder(
@@ -773,7 +829,7 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
               _showFeedback
                   ? (_currentQuestionIndex < _session!.questions.length - 1
                   ? 'Question suivante'
-                  : 'Terminer le quiz')
+                  : 'Terminer le quiz')  // ⭐ Ce texte doit apparaître
                   : 'Valider',
               style: const TextStyle(
                 fontSize: 18,
