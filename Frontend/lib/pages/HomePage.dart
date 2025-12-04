@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:smart_learn/pages/quizzes/QuizDetailPage.dart';
 import 'package:smart_learn/pages/quizzes/QuizzesPage.dart';
+import 'package:smart_learn/pages/videos/VideoPlayerPage.dart';
+import '../models/quiz_model.dart';
+import '../models/video.dart';
 import '../services/auth_service.dart';
+import '../services/quiz_service.dart';
+import '../services/video_service.dart';
 import 'home/home_stat_cards.dart';
 import 'home/home_content_widgets.dart';
 import 'home/home_bottom_nav.dart';
@@ -21,11 +27,15 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _authService = AuthService();
   final _progressService = ProgressService();
+  final _quizService = QuizService();
+  final _videoService = VideoService(); // ✅ NOUVEAU
   int _currentNavIndex = 0;
 
   Map<String, dynamic>? _userData;
   UserProgress? _userProgress;
   bool _isLoading = true;
+  List<QuizModel> _recommendedQuizzes = []; // ✅ NOUVEAU
+  List<Video> _recommendedVideos = []; // ✅ NOUVEAU
 
   @override
   void initState() {
@@ -39,11 +49,19 @@ class _HomePageState extends State<HomePage> {
     try {
       final userData = await _authService.getCurrentUser();
       final progressResult = await _progressService.getUserProgress();
+      final quizzesResult = await _quizService.getRecommendedQuizzes();
+      final videosResult = await _videoService.getRecommendations();
 
       setState(() {
         _userData = userData;
         if (progressResult['success']) {
           _userProgress = progressResult['data'];
+        }
+        if (quizzesResult['success']) {
+          _recommendedQuizzes = quizzesResult['data'];
+        }
+        if (videosResult['success']) {
+          _recommendedVideos = videosResult['videos'];
         }
         _isLoading = false;
       });
@@ -98,18 +116,40 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _handleQuizTap(String quizTitle) {
-    final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.openingQuiz(quizTitle))),
-    );
+  // ✅ NOUVEAU : Navigation vers détail du quiz
+  void _handleQuizTap(QuizModel quiz) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => QuizDetailPage(quizId: quiz.id),
+      ),
+    ).then((_) => _loadAllData());
   }
 
-  void _handleVideoTap(String videoTitle) {
-    final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.playingVideo(videoTitle))),
-    );
+  // ✅ NOUVEAU : Navigation vers la page complète des quiz
+  void _handleSeeAllQuizzes() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const QuizzesPage()),
+    ).then((_) => _loadAllData());
+  }
+
+  // ✅ NOUVEAU : Navigation vers le lecteur vidéo
+  void _handleVideoTap(Video video) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => VideoPlayerPage(video: video),
+      ),
+    ).then((_) => _loadAllData());
+  }
+
+  // ✅ NOUVEAU : Navigation vers la page complète des vidéos
+  void _handleSeeAllVideos() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const VideosPage()),
+    ).then((_) => _loadAllData());
   }
 
   @override
@@ -216,72 +256,71 @@ class _HomePageState extends State<HomePage> {
 
               const SizedBox(height: 32),
 
-              // === Quiz recommandés ===
+              // ✅ MODIFIÉ : Quiz recommandés dynamiques
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: SectionHeader(title: l10n.recommendedQuizzes, onSeeAllTap: () {}),
+                child: SectionHeader(
+                  title: l10n.recommendedQuizzes,
+                  onSeeAllTap: _handleSeeAllQuizzes, // ✅ Navigation vers QuizzesPage
+                ),
               ),
               const SizedBox(height: 16),
+              // ✅ NOUVEAU : Affichage dynamique ou message si vide
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    QuizCard(
-                      title: l10n.advancedAlgebra,
-                      icon: 'Ruler',
-                      questionCount: 15,
-                      difficulty: l10n.medium,
-                      completionPercentage: '85%',
-                      hasAI: true,
-                      onTap: () => _handleQuizTap(l10n.advancedAlgebra),
-                    ),
-                    const SizedBox(height: 12),
-                    QuizCard(
-                      title: l10n.physicsMechanics,
-                      icon: 'Lightning',
-                      questionCount: 20,
-                      difficulty: l10n.hard,
-                      hasAI: true,
-                      onTap: () => _handleQuizTap(l10n.physicsMechanics),
-                    ),
-                  ],
+                child: _recommendedQuizzes.isEmpty
+                    ? _buildEmptyQuizState(l10n)
+                    : Column(
+                  children: _recommendedQuizzes.map((quiz) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: QuizCard(
+                        title: quiz.title,
+                        icon: _getQuizIcon(quiz.category),
+                        questionCount: quiz.questionCount,
+                        difficulty: quiz.difficulty,
+                        hasAI: quiz.hasAI,
+                        onTap: () => _handleQuizTap(quiz),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
 
               const SizedBox(height: 32),
 
-              // === Vidéos récentes ===
+              // ✅ MODIFIÉ : Vidéos récentes dynamiques
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: SectionHeader(title: l10n.recentVideos, onSeeAllTap: () {}),
+                child: SectionHeader(
+                  title: l10n.recentVideos,
+                  onSeeAllTap: _handleSeeAllVideos, // ✅ Navigation vers VideosPage
+                ),
               ),
               const SizedBox(height: 16),
-              SizedBox(
+
+              // ✅ NOUVEAU : Affichage dynamique des vidéos
+              _recommendedVideos.isEmpty
+                  ? Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _buildEmptyVideosState(l10n),
+              )
+                  : SizedBox(
                 height: 220,
-                child: ListView(
+                child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  children: [
-                    VideoCard(
-                      title: l10n.mathFunctions,
-                      thumbnail: 'https://via.placeholder.com/280x160',
-                      duration: '12:45',
-                      onTap: () => _handleVideoTap(l10n.mathFunctions),
-                    ),
-                    VideoCard(
-                      title: l10n.chemistryIntro,
-                      thumbnail: 'https://via.placeholder.com/280x160',
-                      duration: '8:30',
-                      isNew: true,
-                      onTap: () => _handleVideoTap(l10n.chemistryIntro),
-                    ),
-                    VideoCard(
-                      title: l10n.modernHistory,
-                      thumbnail: 'https://via.placeholder.com/280x160',
-                      duration: '15:20',
-                      onTap: () => _handleVideoTap(l10n.modernHistory),
-                    ),
-                  ],
+                  itemCount: _recommendedVideos.length,
+                  itemBuilder: (context, index) {
+                    final video = _recommendedVideos[index];
+                    return VideoCard(
+                      title: video.title,
+                      thumbnail: video.thumbnailUrl,
+                      duration: video.formattedDuration,
+                      isNew: _isNewVideo(video),
+                      onTap: () => _handleVideoTap(video),
+                    );
+                  },
                 ),
               ),
 
@@ -295,5 +334,114 @@ class _HomePageState extends State<HomePage> {
         onTap: _onNavBarTap,
       ),
     );
+  }
+  // ✅ NOUVEAU : Widget pour état vide
+  Widget _buildEmptyQuizState(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.quiz, size: 48, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text(
+            'Aucun quiz disponible',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Revenez plus tard pour découvrir de nouveaux quiz',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ✅ NOUVEAU : Widget pour état vide des vidéos
+  Widget _buildEmptyVideosState(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.video_library, size: 48, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text(
+            'Aucune vidéo disponible',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Revenez plus tard pour découvrir de nouvelles vidéos',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ✅ NOUVEAU : Vérifier si une vidéo est récente (moins de 7 jours)
+  bool _isNewVideo(Video video) {
+    if (video.createdAt == null) return false;
+    final now = DateTime.now();
+    final difference = now.difference(video.createdAt!);
+    return difference.inDays < 7;
+  }
+
+  // ✅ NOUVEAU : Mapper les catégories aux icônes
+  String _getQuizIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'mathématiques':
+      case 'mathematics':
+        return '📐';
+      case 'sciences':
+      case 'science':
+        return '🔬';
+      case 'histoire':
+      case 'history':
+        return '📚';
+      case 'géographie':
+      case 'geography':
+        return '🌍';
+      case 'langues':
+      case 'languages':
+        return '🗣️';
+      case 'informatique':
+      case 'computer science':
+        return '💻';
+      case 'physique':
+      case 'physics':
+        return '⚡';
+      case 'chimie':
+      case 'chemistry':
+        return '⚗️';
+      default:
+        return '📝';
+    }
   }
 }

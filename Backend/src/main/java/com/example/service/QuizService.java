@@ -88,7 +88,7 @@ public class QuizService {
         // Plus tard, on pourra intégrer la logique IA
         List<Quiz> quizzes = quizRepository.findByIsActiveTrue()
                 .stream()
-                .limit(10)
+                .limit(3)
                 .collect(Collectors.toList());
 
         return quizzes.stream()
