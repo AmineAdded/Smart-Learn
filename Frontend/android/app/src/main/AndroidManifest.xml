@@ -8,7 +8,8 @@
         android:label="smart_learn"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:enableOnBackInvokedCallback="true">
 
         <activity
             android:name=".MainActivity"
@@ -45,10 +46,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
     </application>
 
     <!-- ⭐ QUERIES NÉCESSAIRES POUR OUVRIR LINKEDIN ET AUTRES APPS -->
     <queries>
+        <intent>
+            <action android:name="com.google.android.gms.auth.api.signin.GOOGLE_SIGN_IN" />
+        </intent>
         <!-- Pour ouvrir les liens HTTPS (LinkedIn, etc.) -->
         <intent>
             <action android:name="android.intent.action.VIEW" />

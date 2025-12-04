@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'SignUpPage.dart';
 import '../services/auth_service.dart';
+import '../services/google_signin_service.dart'; // ✅ NOUVEAU
 import 'login/login_form_fields.dart';
 import 'login/login_ui_components.dart';
 import 'package:smart_learn/pages/ForgotPasswordPage.dart';
-import '../l10n/app_localizations.dart'; // AJOUTÉ
+import '../l10n/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -18,6 +19,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
+  final _googleSignInService = GoogleSignInService(); // ✅ NOUVEAU
 
   bool _isLoading = false;
 
@@ -66,9 +68,33 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _handleGoogleLogin() {
-    final l10n = AppLocalizations.of(context)!;
-    _showSnackBar(l10n.featureInDevelopment, Colors.blue);
+  /// ✅ NOUVEAU : Gérer la connexion Google
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await _googleSignInService.signInWithGoogle();
+
+      setState(() => _isLoading = false);
+      if (!mounted) return;
+
+      if (result['success']) {
+        final l10n = AppLocalizations.of(context)!;
+        final prenom = result['data']['prenom'] ?? 'utilisateur';
+        _showSnackBar(
+          l10n.loginSuccess(prenom),
+          Colors.green,
+        );
+
+        // Naviguer vers l'écran principal
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        _showErrorDialog(result['message']);
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showErrorDialog('Erreur lors de la connexion avec Google: $e');
+    }
   }
 
   void _navigateToSignUp() {
@@ -117,7 +143,6 @@ class _LoginPageState extends State<LoginPage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      // Plus de Colors.white → compatible dark mode
       backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -130,7 +155,6 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const SizedBox(height: 60),
 
-                  // Composants déjà traduits
                   LoginHeader(l10n: l10n),
 
                   const SizedBox(height: 48),
@@ -170,6 +194,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 24),
 
+                  // ✅ MODIFIÉ : Passer _handleGoogleLogin au lieu d'un message
                   SocialLoginButtons(
                     isLoading: _isLoading,
                     onGooglePressed: _handleGoogleLogin,
