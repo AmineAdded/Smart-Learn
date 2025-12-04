@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class QuizSessionService {
+    @Autowired
+    private ProgressService progressService;
 
     @Autowired
     private QuizRepository quizRepository;
@@ -328,6 +330,7 @@ public class QuizSessionService {
                     .build();
 
             result = quizResultRepository.save(result);
+            progressService.updateProgressAfterQuiz(result);
             System.out.println("✅ Résultat sauvegardé - ID: " + result.getId());
 
             return result;
