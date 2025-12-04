@@ -40,7 +40,6 @@ public class QuizService {
     public List<QuizDTO> getQuizzes(String category, String difficulty, Boolean hasAI) {
         List<Quiz> quizzes;
 
-        // Appliquer les filtres
         if (category != null && difficulty != null) {
             quizzes = quizRepository.findByCategoryAndDifficulty(category, difficulty);
         } else if (category != null) {
@@ -53,7 +52,6 @@ public class QuizService {
             quizzes = quizRepository.findByIsActiveTrue();
         }
 
-        // Convertir en DTO avec informations utilisateur
         return quizzes.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -84,8 +82,6 @@ public class QuizService {
      * Récupérer les quiz recommandés basés sur les intérêts de l'utilisateur
      */
     public List<QuizDTO> getRecommendedQuizzes() {
-        // Pour l'instant, retourner les quiz les plus récents
-        // Plus tard, on pourra intégrer la logique IA
         List<Quiz> quizzes = quizRepository.findByIsActiveTrue()
                 .stream()
                 .limit(10)
@@ -97,12 +93,13 @@ public class QuizService {
     }
 
     /**
-     * ⭐ NOUVELLE MÉTHODE - Récupérer les détails complets d'un quiz
+     * ⭐ MÉTHODE CORRIGÉE - Récupérer les détails complets d'un quiz
      */
     public QuizDetailDTO getQuizDetail(Long quizId) {
-        System.out.println("📥 Service: Récupération des détails du quiz #" + quizId);
+        System.out.println("========================================");
+        System.out.println("📥 DÉBUT - Récupération détails quiz #" + quizId);
+        System.out.println("========================================");
 
-        // Récupérer le quiz
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new RuntimeException("Quiz non trouvé avec l'ID: " + quizId));
 
@@ -110,37 +107,33 @@ public class QuizService {
             throw new RuntimeException("Ce quiz n'est plus disponible");
         }
 
-        // Récupérer les questions pour analyser la distribution
+        // Récupérer les questions
         List<Question> questions = new ArrayList<>();
         try {
             questions = questionRepository.findByQuizId(quizId);
             System.out.println("✅ " + questions.size() + " questions trouvées");
         } catch (Exception e) {
-            System.err.println("⚠️ Erreur lors de la récupération des questions: " + e.getMessage());
+            System.err.println("⚠️ Erreur questions: " + e.getMessage());
         }
 
-        // Construire la distribution des types de questions
         QuizDetailDTO.QuestionDistribution distribution = buildQuestionDistribution(questions);
 
-        // Récupérer toutes les tentatives du quiz
+        // ⭐ CORRECTION 1: Récupérer TOUS les résultats pour les stats globales
         List<QuizResult> allResults = new ArrayList<>();
         try {
             allResults = quizResultRepository.findByQuizId(quizId);
-            System.out.println("✅ " + allResults.size() + " résultats trouvés");
+            System.out.println("📊 STATS GLOBALES: " + allResults.size() + " résultats totaux (tous utilisateurs)");
         } catch (Exception e) {
-            System.err.println("⚠️ Erreur lors de la récupération des résultats: " + e.getMessage());
+            System.err.println("⚠️ Erreur résultats globaux: " + e.getMessage());
         }
 
-        // Construire les statistiques globales
+        // ⭐ Stats globales (TOUS les utilisateurs)
         QuizDetailDTO.QuizStatistics statistics = buildQuizStatistics(allResults);
-
-        // Récupérer le leaderboard (top 5)
         List<QuizDetailDTO.LeaderboardEntry> topScores = buildLeaderboard(allResults);
 
-        // Récupérer les informations utilisateur
+        // ⭐ CORRECTION 2: Stats utilisateur (SEULEMENT l'utilisateur connecté)
         QuizDetailDTO.UserQuizProgress userProgress = buildUserProgress(quizId);
 
-        // Construire le DTO détaillé
         QuizDetailDTO detailDTO = QuizDetailDTO.builder()
                 .id(quiz.getId())
                 .title(quiz.getTitle())
@@ -153,7 +146,7 @@ public class QuizService {
                 .hasAI(quiz.getHasAI())
                 .isActive(quiz.getIsActive())
                 .createdAt(quiz.getCreatedAt())
-                .createdBy("SmartLearn") // Valeur par défaut si pas de créateur
+                .createdBy("SmartLearn")
                 .questionDistribution(distribution)
                 .statistics(statistics)
                 .userProgress(userProgress)
@@ -163,7 +156,9 @@ public class QuizService {
                 .topics(new ArrayList<>())
                 .build();
 
-        System.out.println("✅ Détails du quiz construits avec succès");
+        System.out.println("========================================");
+        System.out.println("✅ FIN - Détails construits avec succès");
+        System.out.println("========================================");
         return detailDTO;
     }
 
@@ -214,10 +209,14 @@ public class QuizService {
     }
 
     /**
-     * Construire les statistiques globales du quiz
+     * ⭐ MÉTHODE CORRECTE - Statistiques globales (TOUS LES UTILISATEURS)
+     * Cette méthode doit bien utiliser TOUS les résultats
      */
-    private QuizDetailDTO.QuizStatistics buildQuizStatistics(List<QuizResult> results) {
-        if (results.isEmpty()) {
+    private QuizDetailDTO.QuizStatistics buildQuizStatistics(List<QuizResult> allResults) {
+        System.out.println("📈 Construction statistiques GLOBALES");
+        System.out.println("   Résultats analysés: " + allResults.size() + " (tous utilisateurs)");
+
+        if (allResults.isEmpty()) {
             return QuizDetailDTO.QuizStatistics.builder()
                     .totalAttempts(0)
                     .averageScore(0.0)
@@ -226,24 +225,26 @@ public class QuizService {
                     .build();
         }
 
-        int totalAttempts = results.size();
+        int totalAttempts = allResults.size();
 
-        double averageScore = results.stream()
+        double averageScore = allResults.stream()
                 .filter(r -> r.getScore() != null)
                 .mapToInt(QuizResult::getScore)
                 .average()
                 .orElse(0.0);
 
-        long completedCount = results.stream()
+        long completedCount = allResults.stream()
                 .filter(r -> r.getCompletedAt() != null)
                 .count();
         int completionRate = (int) ((completedCount * 100.0) / totalAttempts);
 
-        double averageTime = results.stream()
+        double averageTime = allResults.stream()
                 .filter(r -> r.getTimeSpentMinutes() != null)
                 .mapToInt(QuizResult::getTimeSpentMinutes)
                 .average()
                 .orElse(0.0);
+
+        System.out.println("   ✅ Stats: " + totalAttempts + " tentatives, score moyen: " + averageScore + "%");
 
         return QuizDetailDTO.QuizStatistics.builder()
                 .totalAttempts(totalAttempts)
@@ -254,15 +255,19 @@ public class QuizService {
     }
 
     /**
-     * Construire le leaderboard (top 5)
+     * ⭐ MÉTHODE CORRECTE - Leaderboard (TOP 5 DE TOUS LES UTILISATEURS)
+     * Cette méthode doit bien utiliser TOUS les résultats
      */
-    private List<QuizDetailDTO.LeaderboardEntry> buildLeaderboard(List<QuizResult> results) {
-        return results.stream()
+    private List<QuizDetailDTO.LeaderboardEntry> buildLeaderboard(List<QuizResult> allResults) {
+        System.out.println("🏆 Construction LEADERBOARD GLOBAL");
+        System.out.println("   Résultats analysés: " + allResults.size() + " (tous utilisateurs)");
+
+        return allResults.stream()
                 .filter(r -> r.getCompletedAt() != null && r.getScore() != null)
                 .sorted((r1, r2) -> Integer.compare(r2.getScore(), r1.getScore()))
                 .limit(5)
                 .map(r -> {
-                    int rank = (int) results.stream()
+                    int rank = (int) allResults.stream()
                             .filter(result -> result.getScore() != null && result.getScore() > r.getScore())
                             .count() + 1;
 
@@ -272,8 +277,10 @@ public class QuizService {
                                 ? r.getUser().getUsername()
                                 : "Anonyme";
                     } catch (Exception e) {
-                        System.err.println("⚠️ Erreur lors de la récupération du username: " + e.getMessage());
+                        System.err.println("⚠️ Erreur username: " + e.getMessage());
                     }
+
+                    System.out.println("   #" + rank + ": " + username + " - " + r.getScore() + "%");
 
                     return QuizDetailDTO.LeaderboardEntry.builder()
                             .username(username)
@@ -286,12 +293,13 @@ public class QuizService {
     }
 
     /**
-     * Construire la progression utilisateur
+     * ⭐ MÉTHODE CORRECTE - Progression utilisateur (UNIQUEMENT L'UTILISATEUR CONNECTÉ)
      */
     private QuizDetailDTO.UserQuizProgress buildUserProgress(Long quizId) {
         try {
             User currentUser = getCurrentUser();
             if (currentUser == null) {
+                System.out.println("⚠️ Aucun utilisateur connecté");
                 return QuizDetailDTO.UserQuizProgress.builder()
                         .hasAttempted(false)
                         .attemptsCount(0)
@@ -300,11 +308,22 @@ public class QuizService {
                         .build();
             }
 
+            System.out.println("========================================");
+            System.out.println("👤 PROGRESSION UTILISATEUR");
+            System.out.println("   User ID: " + currentUser.getId());
+            System.out.println("   Username: " + currentUser.getUsername());
+            System.out.println("========================================");
+
+            // ⭐ FILTRER UNIQUEMENT PAR L'UTILISATEUR CONNECTÉ
             List<QuizResult> userResults = quizResultRepository.findByUserIdAndQuizId(
-                    currentUser.getId(), quizId
+                    currentUser.getId(),
+                    quizId
             );
 
+            System.out.println("📊 Résultats pour CET utilisateur: " + userResults.size());
+
             if (userResults.isEmpty()) {
+                System.out.println("   ℹ️ Aucune tentative pour cet utilisateur");
                 return QuizDetailDTO.UserQuizProgress.builder()
                         .hasAttempted(false)
                         .attemptsCount(0)
@@ -326,6 +345,12 @@ public class QuizService {
 
             String progressStatus = lastResult.getCompletedAt() != null ? "completed" : "in_progress";
 
+            System.out.println("✅ Progression calculée:");
+            System.out.println("   - Tentatives: " + userResults.size());
+            System.out.println("   - Meilleur score: " + bestScore + "%");
+            System.out.println("   - Dernier score: " + lastResult.getScore() + "%");
+            System.out.println("========================================");
+
             return QuizDetailDTO.UserQuizProgress.builder()
                     .hasAttempted(true)
                     .attemptsCount(userResults.size())
@@ -337,7 +362,8 @@ public class QuizService {
                     .build();
 
         } catch (Exception e) {
-            System.err.println("⚠️ Erreur lors de la construction de la progression utilisateur: " + e.getMessage());
+            System.err.println("⚠️ Erreur progression utilisateur: " + e.getMessage());
+            e.printStackTrace();
             return QuizDetailDTO.UserQuizProgress.builder()
                     .hasAttempted(false)
                     .attemptsCount(0)
@@ -365,7 +391,6 @@ public class QuizService {
                 .createdAt(quiz.getCreatedAt())
                 .build();
 
-        // Ajouter les informations utilisateur si connecté
         try {
             User currentUser = getCurrentUser();
             if (currentUser != null) {
@@ -387,8 +412,7 @@ public class QuizService {
                 }
             }
         } catch (Exception e) {
-            // Pas d'utilisateur connecté ou erreur
-            System.err.println("⚠️ Erreur lors de la conversion en DTO: " + e.getMessage());
+            System.err.println("⚠️ Erreur conversion DTO: " + e.getMessage());
         }
 
         return dto;
