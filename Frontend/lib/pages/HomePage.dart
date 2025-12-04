@@ -248,38 +248,76 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
+              // Dans HomePage.dart, ajoutez cette section après les vidéos récentes
+// Remplacez la partie à partir de la ligne "const SizedBox(height: 100)," par :
+
+              // Dans HomePage.dart, ajoutez cette section après les vidéos récentes
+// Remplacez la partie à partir de la ligne "const SizedBox(height: 100)," par :
+
               const SizedBox(height: 32),
 
-              // === Vidéos récentes ===
+              // === Nouvelle section : Images ===
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: SectionHeader(title: l10n.recentVideos, onSeeAllTap: () {}),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Contenu vedette',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                height: 220,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+
+              // Grille de 3 images
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    VideoCard(
-                      title: l10n.mathFunctions,
-                      thumbnail: 'https://via.placeholder.com/280x160',
-                      duration: '12:45',
-                      onTap: () => _handleVideoTap(l10n.mathFunctions),
+                    Expanded(
+                      child: _buildImageCard(
+                        context,
+                        imagePath: 'assets/images/image1.png', // ← Changez le nom selon vos images
+                        title: 'Mathématiques',
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Image 1 cliquée')),
+                          );
+                        },
+                      ),
                     ),
-                    VideoCard(
-                      title: l10n.chemistryIntro,
-                      thumbnail: 'https://via.placeholder.com/280x160',
-                      duration: '8:30',
-                      isNew: true,
-                      onTap: () => _handleVideoTap(l10n.chemistryIntro),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildImageCard(
+                        context,
+                        imagePath: 'assets/images/image2.png',
+                        title: 'Physiques',
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Image 2 cliquée')),
+                          );
+                        },
+                      ),
                     ),
-                    VideoCard(
-                      title: l10n.modernHistory,
-                      thumbnail: 'https://via.placeholder.com/280x160',
-                      duration: '15:20',
-                      onTap: () => _handleVideoTap(l10n.modernHistory),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildImageCard(
+                        context,
+                        imagePath: 'assets/images/image3.png',
+                        title: 'Francais',
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Image 3 cliquée')),
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -293,6 +331,74 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: CustomBottomNavigationBar(
         currentIndex: _currentNavIndex,
         onTap: _onNavBarTap,
+      ),
+    );
+  }
+
+  // === Nouvelle méthode : Widget pour une carte image ===
+  Widget _buildImageCard(
+      BuildContext context, {
+        required String imagePath,
+        required String title,
+        required VoidCallback onTap,
+      }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Image
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+              child: Image.asset(
+                imagePath,
+                height: 120,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // En cas d'erreur (image non trouvée)
+                  return Container(
+                    height: 120,
+                    color: Colors.grey[300],
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
+              ),
+            ),
+            // Titre
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
