@@ -65,4 +65,38 @@ public interface QuizResultRepository extends JpaRepository<QuizResult, Long> {
            "WHERE qr.user.id = :userId " +
            "GROUP BY q.category")
     List<Object[]> getProgressBySubject(@Param("userId") Long userId);
+
+    /**
+     * 🆕 MÉTHODE ALTERNATIVE : Récupérer tous les résultats depuis une date
+     * Utile pour la semaine courante
+     */
+    @Query("SELECT qr FROM QuizResult qr WHERE qr.user.id = :userId " +
+            "AND qr.completedAt >= :startDate " +
+            "ORDER BY qr.completedAt ASC")
+    List<QuizResult> findByUserIdFromDate(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDateTime startDate
+    );
+
+    /**
+     * 🆕 DEBUG : Récupérer le dernier résultat d'un utilisateur
+     */
+    @Query("SELECT qr FROM QuizResult qr WHERE qr.user.id = :userId " +
+            "ORDER BY qr.completedAt DESC")
+    List<QuizResult> findLatestByUserId(
+            @Param("userId") Long userId,
+            org.springframework.data.domain.Pageable pageable
+    );
+
+    /**
+     * 🆕 DEBUG : Compter les résultats dans une plage de dates
+     */
+    @Query("SELECT COUNT(qr) FROM QuizResult qr WHERE qr.user.id = :userId " +
+            "AND qr.completedAt >= :startDate " +
+            "AND qr.completedAt < :endDate")
+    Long countByUserIdAndDateRange(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 }

@@ -40,34 +40,72 @@ class _ProgressionPageState extends State<ProgressionPage> {
     });
 
     try {
-      // Charger le progrès utilisateur
+      print('📊 ========================================');
+      print('📊 CHARGEMENT DES STATISTIQUES');
+      print('📊 ========================================');
+
+      // ✅ ÉTAPE 1: Charger le progrès utilisateur
+      print('1️⃣ Chargement du progrès utilisateur...');
       final progressResult = await _progressService.getUserProgress();
       if (progressResult['success']) {
         _userProgress = progressResult['data'];
+        print('✅ Progrès chargé:');
+        print('   - XP Total: ${_userProgress!.totalXp}');
+        print('   - Niveau: ${_userProgress!.currentLevel} (${_userProgress!.levelTitle})');
+        print('   - Quiz complétés: ${_userProgress!.quizCompleted}');
+        print('   - Quiz réussis: ${_userProgress!.quizSucceeded}');
+        print('   - Taux de réussite: ${_userProgress!.averageSuccessRate}%');
+        print('   - Temps d\'étude: ${_userProgress!.totalStudyTimeMinutes} min');
+        print('   - Vidéos vues: ${_userProgress!.videosWatched}');
+        print('   - Streak actuel: ${_userProgress!.currentStreak} jours');
+      } else {
+        print('❌ Erreur chargement progrès: ${progressResult['message']}');
       }
 
-      // Charger les statistiques détaillées
+      // ✅ ÉTAPE 2: Charger les statistiques détaillées
+      print('2️⃣ Chargement des statistiques détaillées...');
       final statsResult = await _progressService.getStatistics();
       if (statsResult['success']) {
         _statistics = statsResult['data'];
+        print('✅ Statistiques chargées:');
+        print('   - Objectifs: ${_statistics!.goals.length}');
+        print('   - Rang global: ${_statistics!.globalRank}/${_statistics!.totalUsers}');
+      } else {
+        print('❌ Erreur chargement stats: ${statsResult['message']}');
       }
 
-      // Charger la progression hebdomadaire
+      // ✅ ÉTAPE 3: Charger la progression hebdomadaire
+      print('3️⃣ Chargement de la progression hebdomadaire...');
       final weeklyResult = await _progressService.getWeeklyProgress();
       if (weeklyResult['success']) {
         _weeklyProgress = weeklyResult['data'];
+        print('✅ Progression hebdomadaire chargée:');
+        print('   - XP cette semaine: ${_weeklyProgress!['currentWeekXp']}');
+        print('   - XP semaine dernière: ${_weeklyProgress!['lastWeekXp']}');
+        print('   - Changement: ${_weeklyProgress!['changePercentage']}%');
+      } else {
+        print('❌ Erreur chargement weekly: ${weeklyResult['message']}');
       }
 
       setState(() {
         _isLoading = false;
       });
-    } catch (e) {
+
+      print('✅ ========================================');
+      print('✅ TOUTES LES DONNÉES CHARGÉES');
+      print('✅ ========================================');
+    } catch (e, stackTrace) {
+      print('❌ ========================================');
+      print('❌ ERREUR DE CHARGEMENT');
+      print('❌ ========================================');
+      print('Erreur: $e');
+      print('Stack trace: $stackTrace');
+
       final l10n = AppLocalizations.of(context)!;
       setState(() {
         _isLoading = false;
         _errorMessage = l10n.errorLoadingData;
       });
-      print('Erreur: $e');
     }
   }
 
