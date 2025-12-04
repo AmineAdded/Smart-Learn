@@ -45,5 +45,20 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- ios/Runner/Info.plist -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.VOTRE_CLIENT_ID_INVERSE</string>
+            </array>
+        </dict>
+    </array>
+
+    <key>GIDClientID</key>
+    <string>VOTRE_CLIENT_ID.apps.googleusercontent.com</string>
 </dict>
 </plist>
