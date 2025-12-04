@@ -44,6 +44,7 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/images/
   generate: true
 
 # ✅ Configuration de l'icône (en dehors de la section flutter)
