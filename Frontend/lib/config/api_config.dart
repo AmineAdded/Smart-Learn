@@ -3,7 +3,7 @@ class ApiConfig {
   // Remplacez cette URL par celle de votre tunnel Cloudflare
 
 
-  static const String baseUrl = 'https://assume-rail-witnesses-drive.trycloudflare.com';
+  static const String baseUrl = 'https://favors-organisations-images-implies.trycloudflare.com';
 
 
 

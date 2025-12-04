@@ -290,11 +290,25 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 32),
 
               // ✅ MODIFIÉ : Vidéos récentes dynamiques
+              // === Nouvelle section : Images ===
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: SectionHeader(
                   title: l10n.recentVideos,
                   onSeeAllTap: _handleSeeAllVideos, // ✅ Navigation vers VideosPage
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Contenu vedette',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -321,6 +335,52 @@ class _HomePageState extends State<HomePage> {
                       onTap: () => _handleVideoTap(video),
                     );
                   },
+
+              // Grille de 3 images
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: _buildImageCard(
+                        context,
+                        imagePath: 'assets/images/image1.png', // ← Changez le nom selon vos images
+                        title: 'Mathématiques',
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Image 1 cliquée')),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildImageCard(
+                        context,
+                        imagePath: 'assets/images/image2.png',
+                        title: 'Physiques',
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Image 2 cliquée')),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildImageCard(
+                        context,
+                        imagePath: 'assets/images/image3.png',
+                        title: 'Francais',
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Image 3 cliquée')),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -443,5 +503,73 @@ class _HomePageState extends State<HomePage> {
       default:
         return '📝';
     }
+  }
+
+  // === Nouvelle méthode : Widget pour une carte image ===
+  Widget _buildImageCard(
+      BuildContext context, {
+        required String imagePath,
+        required String title,
+        required VoidCallback onTap,
+      }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Image
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+              child: Image.asset(
+                imagePath,
+                height: 120,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // En cas d'erreur (image non trouvée)
+                  return Container(
+                    height: 120,
+                    color: Colors.grey[300],
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
+              ),
+            ),
+            // Titre
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

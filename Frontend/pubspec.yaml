@@ -29,36 +29,27 @@ dependencies:
   # Stockage local
   shared_preferences: ^2.2.2
   flutter_dotenv: ^5.1.0
-  youtube_player_flutter: ^9.0.3  # Player YouTube intégré
+  youtube_player_flutter: ^9.0.3
   cached_network_image: ^3.3.0
   flutter_svg: ^2.0.9
-  # ✅ NOUVEAU : Gestion du thèm
   provider: ^6.1.1
-  # ✅ Internationalisation
   intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  flutter_launcher_icons: ^0.13.1  # ✅ Corrigé : même niveau que flutter_test
   flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
   assets:
     - .env
-  # ✅ NOUVEAU : Génération des traductions
+    - assets/images/
   generate: true
 
-  # Si vous avez des assets
-  # assets:
-  #   - assets/google_logo.png
-  #   - assets/images/
-
-  # Fonts personnalisées (optionnel)
-  # fonts:
-  #   - family: Roboto
-  #     fonts:
-  #       - asset: fonts/Roboto-Regular.ttf
-  #       - asset: fonts/Roboto-Bold.ttf
-  #         weight: 700
+# ✅ Configuration de l'icône (en dehors de la section flutter)
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/smart_learn.png"
