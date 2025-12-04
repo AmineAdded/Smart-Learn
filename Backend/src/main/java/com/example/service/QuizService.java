@@ -84,7 +84,7 @@ public class QuizService {
     public List<QuizDTO> getRecommendedQuizzes() {
         List<Quiz> quizzes = quizRepository.findByIsActiveTrue()
                 .stream()
-                .limit(10)
+                .limit(3)
                 .collect(Collectors.toList());
 
         return quizzes.stream()
