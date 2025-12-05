@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../services/quiz_session_service.dart';
 import '../../models/quiz_session_model.dart';
 import 'QuizResultPage.dart';
+import '../../services/gemini_service.dart';
 
 class QuizPlayPage extends StatefulWidget {
   final int quizId;
@@ -29,6 +30,9 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
   String? _selectedAnswer;
   bool _showFeedback = false;
   AnswerFeedbackModel? _currentFeedback;
+  String? _grokExplanation; // Explication générée par Grok
+  bool _isGeneratingExplanation = false; // État du chargement
+  final _geminiService = GeminiService(); // Instance du service
 
   // Chronomètre
   Timer? _timer;
@@ -116,14 +120,71 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
     );
 
     if (result['success']) {
+      final feedback = result['data'] as AnswerFeedbackModel;
+
       setState(() {
-        _currentFeedback = result['data'];
+        _currentFeedback = feedback;
         _showFeedback = true;
+        _isGeneratingExplanation = true;
+        _grokExplanation = null;
       });
+
+      // Générer l'explication avec Grok en parallèle
+      _generateGrokExplanation(currentQuestion, feedback);
+
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result['message'])),
       );
+    }
+  }
+  Future<void> _generateGrokExplanation(
+      QuestionModel question,
+      AnswerFeedbackModel feedback,
+      ) async {
+    print('🤖 Génération de l\'explication avec Grok...');
+
+    // Récupérer le texte de la réponse utilisateur
+    String userAnswerText = _selectedAnswer ?? '';
+
+    // Si c'est un QCM, récupérer le texte de l'option sélectionnée
+    if (question.options != null && question.options!.isNotEmpty) {
+      try {
+        final selectedOptionId = int.parse(_selectedAnswer!);
+        final selectedOption = question.options!.firstWhere(
+              (opt) => opt.id == selectedOptionId,
+          orElse: () => question.options!.first,
+        );
+        userAnswerText = selectedOption.optionText;
+      } catch (e) {
+        print('⚠️ Erreur lors de la récupération de l\'option: $e');
+      }
+    }
+
+    // Extraire les options de réponse
+    List<String>? optionsText;
+    if (question.options != null && question.options!.isNotEmpty) {
+      optionsText = question.options!.map((opt) => opt.optionText).toList();
+    }
+
+    // Appeler l'API Grok
+    final geminiResult = await _geminiService.generateQuizExplanation(
+      questionText: question.questionText,
+      userAnswer: userAnswerText,
+      correctAnswer: feedback.correctAnswer,
+      options: optionsText,
+      isCorrect: feedback.isCorrect,
+    );
+
+    if (mounted) {
+      setState(() {
+        _grokExplanation = geminiResult['explanation'];
+        _isGeneratingExplanation = false;
+      });
+
+      if (!geminiResult['success']) {
+        print('⚠️ Utilisation de l\'explication de secours');
+      }
     }
   }
 
@@ -138,6 +199,8 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
       _showFeedback = false;
       _selectedAnswer = null;
       _currentFeedback = null;
+      _grokExplanation = null; // ← AJOUTER CETTE LIGNE
+      _isGeneratingExplanation = false; // ← AJOUTER CETTE LIGNE
       _currentQuestionIndex++;
       _questionStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     });
@@ -711,48 +774,76 @@ class _QuizPlayPageState extends State<QuizPlayPage> {
               ),
 
             // Explication
-            if (feedback.explanation != null) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF5B9FD8).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: const [
-                        Icon(
-                          Icons.lightbulb_outline,
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF5B9FD8).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.auto_awesome, color: Color(0xFF5B9FD8), size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Explication IA',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                           color: Color(0xFF5B9FD8),
-                          size: 20,
                         ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Explication',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Afficher l'explication ou un loader
+                  if (_isGeneratingExplanation)
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
                             color: Color(0xFF5B9FD8),
                           ),
                         ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Génération de l\'explication...',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
+                    )
+                  else if (_grokExplanation != null)
                     Text(
-                      feedback.explanation!,
+                      _grokExplanation!,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[700],
                         height: 1.5,
                       ),
+                    )
+                  else
+                    Text(
+                      'Explication non disponible',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
-                  ],
-                ),
+                ],
               ),
-            ],
+            ),
 
             const SizedBox(height: 24),
 
