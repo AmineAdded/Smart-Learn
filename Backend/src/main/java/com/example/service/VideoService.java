@@ -359,8 +359,6 @@ public List<VideoDTO> getFavoriteVideos() {
         
         List<Video> recommended = videoRepository.findAll().stream()
                 .filter(video -> categories.contains(video.getCategory()))
-                .filter(video -> video.getDifficulty().equals(user.getNiveau()) || 
-                               video.getDifficulty().equals("Moyen"))
                 .limit(5)
                 .collect(Collectors.toList());
         

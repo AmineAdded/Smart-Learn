@@ -11,6 +11,8 @@ import com.example.repository.QuizResultRepository;
 import com.example.repository.UserRepository;
 import com.example.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -82,15 +84,16 @@ public class QuizService {
      * Récupérer les quiz recommandés basés sur les intérêts de l'utilisateur
      */
     public List<QuizDTO> getRecommendedQuizzes() {
-        List<Quiz> quizzes = quizRepository.findByIsActiveTrue()
-                .stream()
-                .limit(3)
-                .collect(Collectors.toList());
+
+        Pageable limitTwo = PageRequest.of(0, 2); // page 0, taille 2
+
+        List<Quiz> quizzes = quizRepository.findRecentActiveQuizzes(limitTwo);
 
         return quizzes.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
+
 
     /**
      * ⭐ MÉTHODE CORRIGÉE - Récupérer les détails complets d'un quiz

@@ -287,28 +287,14 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
               // ✅ MODIFIÉ : Vidéos récentes dynamiques
-              // === Nouvelle section : Images ===
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: SectionHeader(
                   title: l10n.recentVideos,
                   onSeeAllTap: _handleSeeAllVideos, // ✅ Navigation vers VideosPage
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Contenu vedette',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -335,6 +321,29 @@ class _HomePageState extends State<HomePage> {
                       onTap: () => _handleVideoTap(video),
                     );
                   },
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // === Nouvelle section : Images ===
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Contenu vedette',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // Grille de 3 images
               Padding(
@@ -383,8 +392,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-
-              const SizedBox(height: 100),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -505,7 +513,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // === Nouvelle méthode : Widget pour une carte image ===
   Widget _buildImageCard(
       BuildContext context, {
         required String imagePath,
